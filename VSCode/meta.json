@@ -1,0 +1,7 @@
+{
+	"name": "TFModFortRiseWinCounters",
+	"version": "0.0.1",
+	"author": "ebe1.kenobi",
+	"description": "Show the win counter for each player in the result match screen, reset only when game restart",
+	"dll": "TFModFortRiseWinCounters.dll"
+}
