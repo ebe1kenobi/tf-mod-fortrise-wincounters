@@ -30,7 +30,6 @@ namespace TFModFortRiseWinCounters
     public override void Load()
     {
       MyTFGame.Load();
-      //MyRollcallElement.Load();
       MyVersusPlayerMatchResults.Load();
     }
 
@@ -38,7 +37,6 @@ namespace TFModFortRiseWinCounters
     public override void Unload()
     {
       MyTFGame.Unload();
-      //MyRollcallElement.Unload();
       MyVersusPlayerMatchResults.Unload();
     }
   }
