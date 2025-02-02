@@ -1,14 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Reflection;
-using System.Xml;
-using FortRise;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
-using Monocle;
-using MonoMod.ModInterop;
-using MonoMod.Utils;
-using TowerFall;
+﻿using FortRise;
 
 namespace TFModFortRiseWinCounters
 {

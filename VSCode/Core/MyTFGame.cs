@@ -1,15 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Xna.Framework;
-
-using Monocle;
-using MonoMod.Utils;
-using TowerFall;
-
-namespace TFModFortRiseWinCounters
+﻿namespace TFModFortRiseWinCounters
 {
 
   internal class MyTFGame
