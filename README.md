@@ -1,5 +1,8 @@
-Fork of the wincounters mod in the port of Bartizan  Mod in fortrise https://github.com/FortRise/ExampleFortRiseMod/blob/main/BartizanMod/Core/Other.cs
-But in this one, the counters will stay for each player until the game will Quit. In the bartizan mod, the counter reset each time we change the match settings, the players ...
+Fork of the wincounters mod in the port of Bartizan Mod in fortrise https://github.com/FortRise/ExampleFortRiseMod/blob/main/BartizanMod/Core/Other.cs
+
+But in this one, the counters will stay for each player until the game will Quit. 
+
+In the bartizan mod, the counter reset each time we change the match settings, the players ...
 
 * WiderSetMod supported
 
