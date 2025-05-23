@@ -18,7 +18,7 @@ namespace TFModFortRiseWinCounters
     public TFModFortRiseWinCountersModule() 
     {
       Instance = this;
-      //Logger.Init("TFModFortRiseWinCounters");
+      Logger.Init("TFModFortRiseWinCounters");
     }
 
     public override void LoadContent()
