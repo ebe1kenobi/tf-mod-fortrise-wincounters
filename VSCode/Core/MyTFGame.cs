@@ -17,6 +17,7 @@
     private static void Load_patch(On.TowerFall.TFGame.orig_Load orig)
     {
       MyVersusPlayerMatchResults.PlayerWins = new int[8];
+      TFModFortRiseWinCountersModule.loadPreviousResultIfExists();
       orig();
     }
   }
