@@ -7,6 +7,8 @@ using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
 using System.Globalization;
+using System.Security.Cryptography;
+using System.Threading.Tasks;
 
 namespace TFModFortRiseWinCounters
 {
@@ -15,10 +17,17 @@ namespace TFModFortRiseWinCounters
   {
     public static TFModFortRiseWinCountersModule Instance;
 
+    public override Type SettingsType => typeof(TFModFortRiseWinCountersSettings);
+    public static TFModFortRiseWinCountersSettings Settings => (TFModFortRiseWinCountersSettings)Instance.InternalSettings;
+
+    public static APIStat ApiStat;
+    public static bool ReloadNecessary = false;
+
     public TFModFortRiseWinCountersModule() 
     {
       Instance = this;
       Logger.Init("TFModFortRiseWinCounters");
+      ApiStat = new APIStat(".\\Mods\\tf-mod-fortrise-wincounters\\settings.json");
     }
 
     public override void LoadContent()
@@ -27,35 +36,57 @@ namespace TFModFortRiseWinCounters
 
     public override void Load()
     {
-      MyTFGame.Load();
+      MyMainMenu.Load();
       MyVersusPlayerMatchResults.Load();
       MySession.Load();
+      MyVersusMatchResults.Load();
     }
 
     public override void Unload()
     {
-      MyTFGame.Unload();
+      MyMainMenu.Unload();
       MyVersusPlayerMatchResults.Unload();
       MySession.Unload();
+      MyVersusMatchResults.Unload();
     }
 
+    //public static void LoadFromString(string json, bool loadOnlyTotal)
+    //{
+    //  Logger.Info("LoadFromString()");
+    //  Logger.Info(json);
+    //  try
+    //  {
+    //    WinCounterData data = JsonConvert.DeserializeObject<WinCounterData>(json);
+    //    //Logger.Info(json);
+
+    //    if (data != null)
+    //    {
+    //      if (!loadOnlyTotal)
+    //      {
+    //        MyVersusMatchResults.PlayerWinsByColors = data.todayWins;
+    //      }
+    //      MyVersusMatchResults.PlayerTotalWinsByColors = data.totalWins;
+    //      Logger.Info("Fichier stat chargé.");
+    //    }
+    //  }
+    //  catch (Exception ex)
+    //  {
+    //    Logger.Info("Erreur lors de la lecture du json : " + ex.Message);
+    //  }
+    //}
     public static void LoadFromFile(string filePath, bool loadOnlyTotal)
     {
+      Logger.Info("LoadFromFile()");
+      Logger.Info(filePath);
       try
       {
         string json = File.ReadAllText(filePath);
-        WinCounterData data = JsonConvert.DeserializeObject<WinCounterData>(json);
-        Logger.Info(json);
-
-        if (data != null)
-        {
-          if (!loadOnlyTotal)
-          {
-            MyVersusPlayerMatchResults.PlayerWins = data.wins;
-            MyVersusPlayerMatchResults.PlayerWinsByColors = data.todayWins;
+        //LoadFromString(json, loadOnlyTotal);
+        MyVersusMatchResults.winCounter = JsonConvert.DeserializeObject<WinCounterData>(json);
+        if (MyVersusMatchResults.winCounter != null) {
+          if (loadOnlyTotal) {
+            MyVersusMatchResults.winCounter.resetToday();
           }
-          MyVersusPlayerMatchResults.PlayerTotalWinsByColors = data.totalWins;
-          Logger.Info("Fichier stat chargé.");
         }
       }
       catch (Exception ex)
@@ -64,58 +95,131 @@ namespace TFModFortRiseWinCounters
       }
     }
 
-    private class WinCounterData
-    {
-      public String info{ get; set; }
-      public String version { get; set; }
-      public DateTime date { get; set; }
-      public int[] wins { get; set; }
-      public Dictionary<Color, int> todayWins { get; set; }
-      public Dictionary<Color, int> totalWins { get; set; }
+
+    public static string getFileSuffix() {
+
+      return Settings.getTeamName();
     }
 
     public static void SaveCurrentResult()
     {
       string today = DateTime.Now.ToString("yyyy-MM-dd");
-      string fileName = today + "-v-wincounters.json";
+      string fileName = today + "-" + getFileSuffix() + "-wincounters.json";
 
-      var data = new WinCounterData
-      {
-        version = "v1",
-        info =  "248, 120, 248, 255 = pink\n" +
-                "0, 184, 0, 255 = green\n" +
-                "239, 140, 33, 255 = orange\n" +
-                "60, 159, 252, 255 = blue\n" +
-                "211, 0, 0, 255 = red\n" +
-                "242, 255, 0, 255 = yellow\n" +
-                "122, 66, 255, 255 = purple\n" +
-                "0, 255, 246, 255 = blue soft\n" +
-                "229, 229, 229, 255 = white",
-        date = DateTime.Now,
-        wins = MyVersusPlayerMatchResults.PlayerWins,
-        todayWins = MyVersusPlayerMatchResults.PlayerWinsByColors,
-        totalWins = MyVersusPlayerMatchResults.PlayerTotalWinsByColors
-      };
+      //var data = new WinCounterData
+      //{
+      //  version = "v1",
+      //  date = DateTime.Now.ToString("yyyy-MM-dd-HH"),
+      //  todayWins = MyVersusMatchResults.PlayerWinsByColors,
+      //  totalWins = MyVersusMatchResults.PlayerTotalWinsByColors
+      //};
+      MyVersusMatchResults.winCounter.date = DateTime.Now.ToString("yyyy-MM-dd-HH");
 
       try
       {
-        string json = JsonConvert.SerializeObject(data, Formatting.Indented);
+        if (Settings.useOnlineStat)
+        {
+          //ApiStat.PostStat(Settings.getTeamName(), today, JsonConvert.SerializeObject(data, Formatting.Indented));
+          ApiStat.PostStat(Settings.getTeamName(), today, JsonConvert.SerializeObject(MyVersusMatchResults.winCounter, Formatting.Indented));
+          Logger.Info("Fichier stat online sauvegardé : " + fileName);
+          //return; //always save online AND local
+        }
+        string json = JsonConvert.SerializeObject(MyVersusMatchResults.winCounter, Formatting.Indented);
         File.WriteAllText(fileName, json);
-        Console.WriteLine("Fichier stat sauvegardé : " + fileName);
+        Logger.Info("Fichier stat local sauvegardé : " + fileName);
       }
       catch (Exception ex)
       {
-        Console.WriteLine("Erreur lors de la sauvegarde du fichier : " + ex.Message);
+        Logger.Info("Erreur lors de la sauvegarde du fichier : " + ex.Message);
       }
     }
 
+    //public static async Task SaveCurrentResultAsync()
+    //{
+    //  //string today = DateTime.Now.ToString("yyyy-MM-dd");
+    //  //string fileName = today + "-" + getFileSuffix() + "-wincounters.json";
+
+    //  //MyVersusMatchResults.winCounter.date = DateTime.Now.ToString("yyyy-MM-dd-HH");
+
+    //  //try
+    //  //{
+    //  //  if (Settings.useOnlineStat)
+    //  //  {
+    //  //    string jsonData = JsonConvert.SerializeObject(MyVersusMatchResults.winCounter, Formatting.Indented);
+    //  //    await ApiStat.PostStatAsync(Settings.getTeamName(), today, jsonData); // Implement async version
+    //  //    Logger.Info("Fichier stat online sauvegardé : " + fileName);
+    //  //  }
+
+    //    //string json = JsonConvert.SerializeObject(MyVersusMatchResults.winCounter, Formatting.Indented);
+    //    //await File.WriteAllTextAsync(fileName, json); // Available from .NET 4.6+, otherwise use StreamWriter
+    //    //Logger.Info("Fichier stat local sauvegardé : " + fileName);
+    //    Task.Factory.StartNew(() => TFModFortRiseWinCountersModule.SaveCurrentResult());
+    //    //Task.Factory.StartNew(() =>
+    //    //{
+    //    //  try
+    //    //  {
+    //    //    string json = JsonConvert.SerializeObject(MyVersusMatchResults.winCounter, Formatting.Indented);
+    //    //    File.WriteAllText(fileName, json);
+    //    //    Logger.Info("Fichier stat local sauvegardé : " + fileName);
+    //    //  }
+    //    //  catch (Exception ex)
+    //    //  {
+    //    //    Logger.Info("Erreur lors de la sauvegarde du fichier : " + ex.Message);
+    //    //  }
+    //    //});
+    //  //}
+    //  //catch (Exception ex)
+    //  //{
+    //  //  Logger.Info("Erreur lors de la sauvegarde du fichier : " + ex.Message);
+    //  //}
+    //}
+
     public static void loadPreviousResultIfExists()
     {
-      string today = DateTime.Now.ToString("yyyy-MM-dd");
-      //string yesterday = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+      Logger.Info("loadPreviousResultIfExists");
+      //MyVersusMatchResults.PlayerWinsByColors.Clear();
+      //MyVersusMatchResults.PlayerTotalWinsByColors.Clear();
 
-      string todayFile = today + "-v-wincounters.json";
-      //string yesterdayFile = yesterday + "-wincounters.json";
+      MyVersusMatchResults.winCounter.clear();
+
+      string today = DateTime.Now.ToString("yyyy-MM-dd");
+      //ONLINE STAT
+      if (Settings.useOnlineStat) {
+        APIStat.Sheet sheet = ApiStat.GetStat(Settings.getTeamName(), today);
+        if (sheet.error != null)
+        {
+          Logger.Info("error GET,use 0 for each counter");
+          return;
+        }
+        
+        Logger.Info("date sheet = " + sheet.date + " date today = " + today);
+
+        //WinCounterData data = JsonConvert.DeserializeObject<WinCounterData>(sheet.value);
+        MyVersusMatchResults.winCounter = JsonConvert.DeserializeObject<WinCounterData>(sheet.value);
+
+        if (today.Equals(sheet.date) || //problem if playing 2 following days
+            //if we pass midnigth
+            (
+            // if date of saving data > 20h yesterday and date < today 8h
+            string.Compare(MyVersusMatchResults.winCounter.date,DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd-20")) > 0
+            &&
+            string.Compare(MyVersusMatchResults.winCounter.date,DateTime.Now.ToString("yyyy-MM-dd-20")) < 0
+            )
+          )
+        {
+          Logger.Info("same date, ok nothing to do");
+          //TFModFortRiseWinCountersModule.LoadFromString(sheet.value, false);
+        }
+        else {
+          Logger.Info("not same date");
+          MyVersusMatchResults.winCounter.resetToday();
+          //TFModFortRiseWinCountersModule.LoadFromString(sheet.value, true);
+        }
+        return;
+      }
+
+      //LOCAL STAT
+      string todayFile = today + "-" + getFileSuffix() + "-wincounters.json";
 
       // if not exists all counter are set to 0
       if (File.Exists(todayFile))
@@ -126,7 +230,7 @@ namespace TFModFortRiseWinCounters
 
       //load totalWins from last file found
       var files = Directory
-          .EnumerateFiles(Directory.GetCurrentDirectory(), "*-v-wincounters.json")
+          .EnumerateFiles(Directory.GetCurrentDirectory(), "*-" + getFileSuffix() + "-wincounters.json")
           .Select(path => new
           {
             Path = path,
