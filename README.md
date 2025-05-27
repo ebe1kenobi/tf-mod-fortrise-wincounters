@@ -23,7 +23,7 @@ The stat are saved in the TowerFall directory
 
 The Use online Stat save the data online on a spreadsheet (you need to create and configure it)
 
-1. create the spreadsheet
+1. create the spreadsheet (3 column id	date value, no data!)
 2. ![image](https://github.com/user-attachments/assets/370ad798-1742-4b5e-9b78-9c3038c0b155)
 3. create the AppsScript
 4. ![image](https://github.com/user-attachments/assets/094ade8f-5878-42f5-8305-768c38bb848f)
