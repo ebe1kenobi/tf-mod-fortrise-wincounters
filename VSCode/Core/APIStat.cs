@@ -1,11 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Net;
-using System.Runtime;
 using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
-using static MonoMod.InlineRT.MonoModRule;
 
 namespace TFModFortRiseWinCounters
 {

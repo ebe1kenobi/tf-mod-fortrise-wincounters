@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TFModFortRiseWinCounters
+﻿namespace TFModFortRiseWinCounters
 {
   internal class MyMainMenu
   {
@@ -20,7 +14,6 @@ namespace TFModFortRiseWinCounters
 
     public static void CreateRollcall_patch(On.TowerFall.MainMenu.orig_CreateRollcall orig, global::TowerFall.MainMenu self)
     {
-      Logger.Info("CreateRollcall_patch program reload stat");
       TFModFortRiseWinCountersModule.ReloadNecessary = true;
       orig(self);
     }

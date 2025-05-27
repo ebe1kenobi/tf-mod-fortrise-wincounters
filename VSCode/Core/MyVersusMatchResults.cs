@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using TowerFall;
-using Microsoft.Xna.Framework;
-using Monocle;
-using System.Runtime;
 
 namespace TFModFortRiseWinCounters
 {
@@ -28,21 +21,18 @@ namespace TFModFortRiseWinCounters
 
     public static void ctor_patch(On.TowerFall.VersusMatchResults.orig_ctor orig, global::TowerFall.VersusMatchResults self, global::TowerFall.Session session, global::TowerFall.VersusRoundResults roundResults)
     {
-      Logger.Info("MyVersusMatchResults ctor_patch");
       orig(self, session, roundResults);
 
       if (!TFModFortRiseWinCountersModule.Settings.enable) return;
 
       if (TFModFortRiseWinCountersModule.ReloadNecessary) //TODO test !message not displayed 
       {
-        Logger.Info("ReloadNecessary stat");
         TFModFortRiseWinCountersModule.loadPreviousResultIfExists();
         TFModFortRiseWinCountersModule.ReloadNecessary = false;
       }
 
       if (TFModFortRiseWinCountersModule.Settings.resetTodayCounter)
       {
-        Logger.Info("resetTodayCounter stat");
         TFModFortRiseWinCountersModule.Settings.resetTodayCounter = false;
         //MyVersusMatchResults.PlayerWinsByColors.Clear();
         winCounter.resetToday();
