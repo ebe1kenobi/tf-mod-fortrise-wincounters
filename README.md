@@ -25,7 +25,7 @@ The Use online Stat save the data online on a spreadsheet (you need to create an
 
 1. create the spreadsheet (3 column id	date value, no data!)
 2. ![image](https://github.com/user-attachments/assets/370ad798-1742-4b5e-9b78-9c3038c0b155)
-3. create the AppsScript
+3. create the AppsScript (copy the content of script/appscript.js)
 4. ![image](https://github.com/user-attachments/assets/094ade8f-5878-42f5-8305-768c38bb848f)
 5. create the file settings.json with the url of the script deployed in the "TowerFall\Mods\tf-mod-fortrise-wincounters" directory
 
