@@ -80,7 +80,10 @@ namespace TFModFortRiseWinCounters
       if (DynamicData.For(self).TryGet<OutlineText>("winText", out var text)){
         //text.DrawText = MyVersusMatchResults.PlayerWinsByColors[MySession.playerColorForLevel[playerIndex]].ToString() + " (" + MyVersusMatchResults.PlayerTotalWinsByColors[MySession.playerColorForLevel[playerIndex]].ToString() + ")";
         text.DrawText = MyVersusMatchResults.winCounter.getTodayWin(MySession.playerColorForLevel[playerIndex]) 
-                    + " (" + MyVersusMatchResults.winCounter.getTotalWin(MySession.playerColorForLevel[playerIndex]) + ")";
+                    + (TFModFortRiseWinCountersModule.Settings.displayTotalWin
+                        ? " (" + MyVersusMatchResults.winCounter.getTotalWin(MySession.playerColorForLevel[playerIndex]) + ")"
+                        : ""
+                    );
         text.Render();
       }
     }

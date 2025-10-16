@@ -22,7 +22,7 @@ namespace TFModFortRiseWinCounters
     public TFModFortRiseWinCountersModule() 
     {
       Instance = this;
-      Logger.Init("TFModFortRiseWinCounters");
+      Logger.Init("ModWinCounters");
       ApiStat = new APIStat(".\\Mods\\tf-mod-fortrise-wincounters\\settings.json");
     }
 
@@ -32,6 +32,7 @@ namespace TFModFortRiseWinCounters
 
     public override void Load()
     {
+      MyTFGame.Load();
       MyMainMenu.Load();
       MyVersusPlayerMatchResults.Load();
       MySession.Load();
@@ -40,6 +41,7 @@ namespace TFModFortRiseWinCounters
 
     public override void Unload()
     {
+      MyTFGame.Unload();
       MyMainMenu.Unload();
       MyVersusPlayerMatchResults.Unload();
       MySession.Unload();
