@@ -20,12 +20,15 @@ namespace TFModFortRiseLoaderAI
 
     public static void Update_patch(On.TowerFall.VersusRoundResults.orig_Update orig, global::TowerFall.VersusRoundResults self)
     {
-      if (self.Components == null) return;
+      if (self.Components == null)
+      {
+        orig(self);
+        return;
+      }
       for (var i = 0; i < self.Components.Count; i++)
       {
         if (self.Components[i].GetType().ToString() != "Monocle.Text") continue;
         Text text = (Text)self.Components[i];
-
         var dynData = DynamicData.For(text);
         String textText = (String)dynData.Get("text");
         if (textText.Length == 0) continue;
@@ -34,7 +37,10 @@ namespace TFModFortRiseLoaderAI
         int playerIndex = int.Parse(textText[1].ToString()) - 1;
         var dynDataName = DynamicData.For(MyRollcallElement.playerName[playerIndex]);
         dynData.Set("text", dynDataName.Get("text"));
-        text.Position.X -= 30;
+        text.Position.X = 20;
+
+        dynDataName.Dispose();
+        dynData.Dispose();
       }
       orig(self);
     }

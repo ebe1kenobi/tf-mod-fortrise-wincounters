@@ -67,7 +67,6 @@ namespace TFModFortRiseWinCounters
       }
       catch (Exception ex)
       {
-        //Logger.Info("Erreur lors de la lecture du fichier : " + ex.Message);
       }
     }
 
@@ -88,26 +87,19 @@ namespace TFModFortRiseWinCounters
       {
         if (Settings.useOnlineStat)
         {
-          //ApiStat.PostStat(Settings.getTeamName(), today, JsonConvert.SerializeObject(data, Formatting.Indented));
           ApiStat.PostStat(Settings.getTeamName(), today, JsonConvert.SerializeObject(MyVersusMatchResults.winCounter, Formatting.Indented));
-          //Logger.Info("Fichier stat online sauvegardé : " + fileName);
           //return; //always save online AND local
         }
         string json = JsonConvert.SerializeObject(MyVersusMatchResults.winCounter, Formatting.Indented);
         File.WriteAllText(fileName, json);
-        //Logger.Info("Fichier stat local sauvegardé : " + fileName);
       }
       catch (Exception ex)
       {
-        //Logger.Info("Erreur lors de la sauvegarde du fichier : " + ex.Message);
       }
     }
 
     public static void loadPreviousResultIfExists()
     {
-      //MyVersusMatchResults.PlayerWinsByColors.Clear();
-      //MyVersusMatchResults.PlayerTotalWinsByColors.Clear();
-
       MyVersusMatchResults.winCounter.clear();
 
       string today = DateTime.Now.ToString("yyyy-MM-dd");

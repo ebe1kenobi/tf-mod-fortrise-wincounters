@@ -37,11 +37,8 @@ namespace TFModFortRiseWinCounters
         {
           string filePath = @".\Mods\tf-mod-fortrise-wincounters\playerName.json";
 
-          //Logger.Info("Loading all player names from file playerName.json...");
-
           if (!File.Exists(filePath))
           {
-            Logger.Error("File not found: " + filePath);
             MyRollcallElement.playerNamesAvailable = new List<string>();
             return;
           }
@@ -53,14 +50,12 @@ namespace TFModFortRiseWinCounters
 
           if (names == null)
           {
-            Logger.Error("No player names found in JSON file.");
             MyRollcallElement.playerNamesAvailable = new List<string>();
           }
           else
           {
             MyRollcallElement.playerNamesAvailable = names;
             names.Insert(0, "P"); // Add default name which will be display like P1 P2.. P8
-            //Logger.Info("Loaded " + MyRollcallElement.playerNamesAvailable.Count + " player names successfully : " + string.Join(", ", MyRollcallElement.playerNamesAvailable.ToArray()));
           }
         }
         catch (Exception ex)
