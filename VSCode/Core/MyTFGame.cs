@@ -9,6 +9,7 @@ using FortRise;
 using TowerFall;
 using Newtonsoft.Json;
 using Microsoft.Xna.Framework;
+using System.Text.RegularExpressions;
 //using System.Drawing;
 
 namespace TFModFortRiseWinCounters
@@ -47,6 +48,20 @@ namespace TFModFortRiseWinCounters
 
           // Désérialisation avec Newtonsoft.Json
           var names = JsonConvert.DeserializeObject<List<string>>(jsonContent);
+
+          // Nettoyage : lettres, chiffres, espaces
+          for (int i = 0; i < names.Count; i++)
+          {
+            if (names[i] != null)
+            {
+              // Retire tout caractère qui n'est pas lettre, chiffre ou espace
+              names[i] = Regex.Replace(names[i], @"[^A-Za-z0-9 ]", "");
+
+              // Optionnel : trim pour enlever espaces en début/fin
+              names[i] = names[i].Trim();
+              names[i] = names[i].ToUpperInvariant();
+            }
+          }
 
           if (names == null)
           {
