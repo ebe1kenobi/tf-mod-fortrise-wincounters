@@ -5,6 +5,7 @@ using System.IO;
 using Newtonsoft.Json;
 using System.Linq;
 using System.Globalization;
+using TFModFortRiseLoaderAI;
 
 namespace TFModFortRiseWinCounters
 {
@@ -22,7 +23,7 @@ namespace TFModFortRiseWinCounters
     public TFModFortRiseWinCountersModule() 
     {
       Instance = this;
-      Logger.Init("ModWinCounters");
+      //Logger.Init("ModWinCounters");
       ApiStat = new APIStat(".\\Mods\\tf-mod-fortrise-wincounters\\settings.json");
     }
 
@@ -35,8 +36,10 @@ namespace TFModFortRiseWinCounters
       MyTFGame.Load();
       MyMainMenu.Load();
       MyVersusPlayerMatchResults.Load();
-      MySession.Load();
       MyVersusMatchResults.Load();
+      MyRollcallElement.Load();
+      MyPlayerIndicator.Load();
+      MyVersusRoundResults.Load();
     }
 
     public override void Unload()
@@ -44,8 +47,10 @@ namespace TFModFortRiseWinCounters
       MyTFGame.Unload();
       MyMainMenu.Unload();
       MyVersusPlayerMatchResults.Unload();
-      MySession.Unload();
       MyVersusMatchResults.Unload();
+      MyRollcallElement.Unload();
+      MyPlayerIndicator.Unload();
+      MyVersusRoundResults.Unload();
     }
 
     public static void LoadFromFile(string filePath, bool loadOnlyTotal)
@@ -62,7 +67,7 @@ namespace TFModFortRiseWinCounters
       }
       catch (Exception ex)
       {
-        Logger.Info("Erreur lors de la lecture du fichier : " + ex.Message);
+        //Logger.Info("Erreur lors de la lecture du fichier : " + ex.Message);
       }
     }
 
@@ -85,16 +90,16 @@ namespace TFModFortRiseWinCounters
         {
           //ApiStat.PostStat(Settings.getTeamName(), today, JsonConvert.SerializeObject(data, Formatting.Indented));
           ApiStat.PostStat(Settings.getTeamName(), today, JsonConvert.SerializeObject(MyVersusMatchResults.winCounter, Formatting.Indented));
-          Logger.Info("Fichier stat online sauvegardé : " + fileName);
+          //Logger.Info("Fichier stat online sauvegardé : " + fileName);
           //return; //always save online AND local
         }
         string json = JsonConvert.SerializeObject(MyVersusMatchResults.winCounter, Formatting.Indented);
         File.WriteAllText(fileName, json);
-        Logger.Info("Fichier stat local sauvegardé : " + fileName);
+        //Logger.Info("Fichier stat local sauvegardé : " + fileName);
       }
       catch (Exception ex)
       {
-        Logger.Info("Erreur lors de la sauvegarde du fichier : " + ex.Message);
+        //Logger.Info("Erreur lors de la sauvegarde du fichier : " + ex.Message);
       }
     }
 

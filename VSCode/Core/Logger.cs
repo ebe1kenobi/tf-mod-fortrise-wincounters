@@ -24,7 +24,7 @@ namespace TFModFortRiseWinCounters
     }
 
     public static void Info(string message) {
-      logger.Info(message);
+      //logger.Info(message);
     }
   }
 }

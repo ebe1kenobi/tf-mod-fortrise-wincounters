@@ -31,7 +31,7 @@ namespace TFModFortRiseWinCounters
       using (var reader = new StreamReader(response.GetResponseStream()))
       {
         string result = reader.ReadToEnd();
-        Logger.Info("GET result: " + result);
+        //Logger.Info("GET result: " + result);
         Sheet sheet = JsonConvert.DeserializeObject<Sheet>(result);
         return sheet;
       }
@@ -64,7 +64,7 @@ namespace TFModFortRiseWinCounters
       using (var reader = new StreamReader(response.GetResponseStream()))
       {
         string result = reader.ReadToEnd();
-        Logger.Info("POST Response: " + result);
+        //Logger.Info("POST Response: " + result);
       }
     }
 

@@ -1,12 +1,12 @@
 ﻿using System.Threading.Tasks;
+using MonoMod.Utils;
 using TowerFall;
+using System;
 
 namespace TFModFortRiseWinCounters
 {
   internal class MyVersusMatchResults
   {
-    //public static Dictionary<Color, int> PlayerWinsByColors = new Dictionary<Color, int>();
-    //public static Dictionary<Color, int> PlayerTotalWinsByColors = new Dictionary<Color, int>();
     public static WinCounterData winCounter = new WinCounterData();
 
     internal static void Load()
@@ -34,7 +34,6 @@ namespace TFModFortRiseWinCounters
       if (TFModFortRiseWinCountersModule.Settings.resetTodayCounter)
       {
         TFModFortRiseWinCountersModule.Settings.resetTodayCounter = false;
-        //MyVersusMatchResults.PlayerWinsByColors.Clear();
         winCounter.resetToday();
       }
 
@@ -42,26 +41,15 @@ namespace TFModFortRiseWinCounters
       {
         if (!TFGame.Players[playerIndex]) continue;
 
-        //if (!MyVersusMatchResults.PlayerWinsByColors.ContainsKey(MySession.playerColorForLevel[playerIndex]))
-        //{
-        //  MyVersusMatchResults.PlayerWinsByColors.Add(MySession.playerColorForLevel[playerIndex], 0);
-        //}
-
-        //if (!MyVersusMatchResults.PlayerTotalWinsByColors.ContainsKey(MySession.playerColorForLevel[playerIndex]))
-        //{
-        //  MyVersusMatchResults.PlayerTotalWinsByColors.Add(MySession.playerColorForLevel[playerIndex], 0);
-        //}
-
         if (session.MatchStats[playerIndex].Won)
         {
-          //MyVersusMatchResults.PlayerWinsByColors[MySession.playerColorForLevel[playerIndex]]++;
-          //MyVersusMatchResults.PlayerTotalWinsByColors[MySession.playerColorForLevel[playerIndex]]++;
-          winCounter.increment(MySession.playerColorForLevel[playerIndex]);
+          var dynData = DynamicData.For(MyRollcallElement.playerName[playerIndex]);
+          winCounter.increment((String)dynData.Get("text"));
+          dynData.Dispose();
         }
       }
 
       //need to save each time
-      //TFModFortRiseWinCountersModule.SaveCurrentResult(); //todo async
       Task.Factory.StartNew(() => TFModFortRiseWinCountersModule.SaveCurrentResult());
     }
   }

@@ -25,7 +25,7 @@ namespace TFModFortRiseWinCounters
     [SettingsName("Reset today counter\n\n(if a new player begin later)")]
     public bool resetTodayCounter = false;
 
-    [SettingsName("Use Online stat\n\n(need a config file)")]
+    [SettingsName("Use Online stat (need a config file)")]
     public bool useOnlineStat = false;
 
     public string getTeamName() {

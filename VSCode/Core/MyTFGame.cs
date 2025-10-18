@@ -4,18 +4,17 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading;
 using Monocle;
+using MonoMod.Utils;
 using FortRise;
 using TowerFall;
 using Newtonsoft.Json;
+using Microsoft.Xna.Framework;
+//using System.Drawing;
 
 namespace TFModFortRiseWinCounters
 {
   internal class MyTFGame
   {
-    // Variable statique pour stocker les noms des joueurs
-    public static List<string> PlayerNames = new List<string>();
-    static String[] playerInputsName = new String[8];
-
     internal static void Load()
     {
       On.TowerFall.TFGame.Load += Load_patch;
@@ -30,18 +29,20 @@ namespace TFModFortRiseWinCounters
     {
       orig();
 
+
+
       TaskHelper.Run("LOAD CONFIG FILE WITH PLAYER NAME", () =>
       {
         try
         {
           string filePath = @".\Mods\tf-mod-fortrise-wincounters\playerName.json";
 
-          Logger.Info("Loading all player names from file playerName.json...");
+          //Logger.Info("Loading all player names from file playerName.json...");
 
           if (!File.Exists(filePath))
           {
             Logger.Error("File not found: " + filePath);
-            PlayerNames = new List<string>();
+            MyRollcallElement.playerNamesAvailable = new List<string>();
             return;
           }
 
@@ -53,12 +54,13 @@ namespace TFModFortRiseWinCounters
           if (names == null)
           {
             Logger.Error("No player names found in JSON file.");
-            PlayerNames = new List<string>();
+            MyRollcallElement.playerNamesAvailable = new List<string>();
           }
           else
           {
-            PlayerNames = names;
-            Logger.Info("Loaded " + PlayerNames.Count + " player names successfully : " + string.Join(", ", PlayerNames.ToArray()));
+            MyRollcallElement.playerNamesAvailable = names;
+            names.Insert(0, "P"); // Add default name which will be display like P1 P2.. P8
+            //Logger.Info("Loaded " + MyRollcallElement.playerNamesAvailable.Count + " player names successfully : " + string.Join(", ", MyRollcallElement.playerNamesAvailable.ToArray()));
           }
         }
         catch (Exception ex)
