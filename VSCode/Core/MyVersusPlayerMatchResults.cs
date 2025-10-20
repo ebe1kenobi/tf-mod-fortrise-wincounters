@@ -45,10 +45,9 @@ namespace TFModFortRiseWinCounters
       var playerIndex = DynamicData.For(self).Get<int>("playerIndex");
       if (DynamicData.For(self).TryGet<OutlineText>("winText", out var text)){
 
-        var dynDataName = DynamicData.For(MyRollcallElement.playerName[playerIndex]);
-        text.DrawText = MyVersusMatchResults.winCounter.getTodayWin((String)dynDataName.Get("text")) 
+        text.DrawText = MyVersusMatchResults.winCounter.getTodayWin(CustomNameImport.GetPlayerName(playerIndex)) 
                     + (TFModFortRiseWinCountersModule.Settings.displayTotalWin
-                        ? " (" + MyVersusMatchResults.winCounter.getTotalWin((String)dynDataName.Get("text")) + ")"
+                        ? " (" + MyVersusMatchResults.winCounter.getTotalWin(CustomNameImport.GetPlayerName(playerIndex)) + ")"
                         : ""
                     );
         text.Render();

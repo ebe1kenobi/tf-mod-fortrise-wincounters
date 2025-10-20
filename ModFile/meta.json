@@ -1,7 +1,14 @@
 {
 	"name": "Win Counters",
-	"version": "0.0.3",
+	"version": "0.0.4",
+	"required": "4.1.0",
 	"author": "ebe1.kenobi",
 	"description": "Show the win counter for each player in the result match screen, reset only when game restart, and can select a player name from file playernName.json with left trigger",
-	"dll": "TFModFortRiseWinCounters.dll"
+	"dll": "TFModFortRiseWinCounters.dll",
+	"dependencies": [
+		{
+			"name": "Custom Name",
+			"version": "0.0.1"
+		}
+	]
 }

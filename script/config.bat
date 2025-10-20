@@ -2,6 +2,7 @@ set REPO_DRIVE=D:
 set TOWERFALL_DRIVE=C:
 
 set DLL_MOD_FILE_NAME=TFModFortRiseWinCounters.dll
+set PDB_MOD_FILE_NAME=TFModFortRiseWinCounters.pdb
 set MODULE_DIR_NAME=tf-mod-fortrise-wincounters
 
 set REPO_PATH=D:\__dev\code\tf-mod-fortrise-wincounters\

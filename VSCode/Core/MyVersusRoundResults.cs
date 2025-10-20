@@ -1,9 +1,9 @@
 ﻿using Monocle;
 using MonoMod.Utils;
 using System;
-using TFModFortRiseWinCounters;
+//using TFModFortRiseWinCounters;
 
-namespace TFModFortRiseLoaderAI
+namespace TFModFortRiseWinCounters
 {
   public class MyVersusRoundResults
   {
@@ -35,11 +35,8 @@ namespace TFModFortRiseLoaderAI
         if (!textText[0].ToString().Equals("P")) continue;
         if (textText[1].ToString().Equals(" ")) continue; //second pass for NAI 1 AI 1 P 1
         int playerIndex = int.Parse(textText[1].ToString()) - 1;
-        var dynDataName = DynamicData.For(MyRollcallElement.playerName[playerIndex]);
-        dynData.Set("text", dynDataName.Get("text"));
+        dynData.Set("text", CustomNameImport.GetPlayerName(playerIndex));
         text.Position.X = 20;
-
-        dynDataName.Dispose();
         dynData.Dispose();
       }
       orig(self);

@@ -13,10 +13,14 @@ namespace TFModFortRiseWinCounters
     public APIStat(string configPath)
     {
       // Charger le JSON de config avec Newtonsoft
-      var json = File.ReadAllText(configPath);
-      var config = JsonConvert.DeserializeObject<Config>(json);
-
-      urlTemplate = config.appliWebUrl;
+      try
+      {
+        var json = File.ReadAllText(configPath);
+        var config = JsonConvert.DeserializeObject<Config>(json);
+        urlTemplate = config.appliWebUrl;
+      } catch (Exception ex) {
+        urlTemplate = "";
+      }
     }
 
     public Sheet GetStat(string id, string date)

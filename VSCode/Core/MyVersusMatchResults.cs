@@ -43,9 +43,7 @@ namespace TFModFortRiseWinCounters
 
         if (session.MatchStats[playerIndex].Won)
         {
-          var dynData = DynamicData.For(MyRollcallElement.playerName[playerIndex]);
-          winCounter.increment((String)dynData.Get("text"));
-          dynData.Dispose();
+          winCounter.increment(CustomNameImport.GetPlayerName(playerIndex));
         }
       }
 

@@ -5,7 +5,9 @@ using System.IO;
 using Newtonsoft.Json;
 using System.Linq;
 using System.Globalization;
-using TFModFortRiseLoaderAI;
+//using TFModFortRiseLoaderAI;
+using System.Diagnostics;
+using MonoMod.ModInterop;
 
 namespace TFModFortRiseWinCounters
 {
@@ -22,6 +24,10 @@ namespace TFModFortRiseWinCounters
 
     public TFModFortRiseWinCountersModule() 
     {
+      //if (!Debugger.IsAttached)
+      //{
+      //  Debugger.Launch(); // Proposera d’attacher Visual Studio
+      //}
       Instance = this;
       //Logger.Init("ModWinCounters");
       ApiStat = new APIStat(".\\Mods\\tf-mod-fortrise-wincounters\\settings.json");
@@ -33,22 +39,20 @@ namespace TFModFortRiseWinCounters
 
     public override void Load()
     {
-      MyTFGame.Load();
       MyMainMenu.Load();
       MyVersusPlayerMatchResults.Load();
       MyVersusMatchResults.Load();
-      MyRollcallElement.Load();
       MyPlayerIndicator.Load();
       MyVersusRoundResults.Load();
+
+      typeof(CustomNameImport).ModInterop();
     }
 
     public override void Unload()
     {
-      MyTFGame.Unload();
       MyMainMenu.Unload();
       MyVersusPlayerMatchResults.Unload();
       MyVersusMatchResults.Unload();
-      MyRollcallElement.Unload();
       MyPlayerIndicator.Unload();
       MyVersusRoundResults.Unload();
     }

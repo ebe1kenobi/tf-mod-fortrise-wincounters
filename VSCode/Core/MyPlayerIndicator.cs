@@ -21,8 +21,7 @@ namespace TFModFortRiseWinCounters
     {
       orig(self, offset, playerIndex, crown);
       var dynData = DynamicData.For(self);
-      var dynDataName = DynamicData.For(MyRollcallElement.playerName[playerIndex]);
-      dynData.Set("text", dynDataName.Get("text"));
+      dynData.Set("text", CustomNameImport.GetPlayerName(playerIndex));
       dynData.Dispose();
     }
   }
