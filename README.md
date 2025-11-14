@@ -1,3 +1,6 @@
+2025/10/20 : Need Mod "Custom Name" https://github.com/ebe1kenobi/tf-mod-fortrise-custom-name, it will now save the stat with the name instead of the color of the player. So the player can change his archer when he wants. 
+
+
 Fork of the wincounters mod in the port of Bartizan Mod in fortrise https://github.com/FortRise/ExampleFortRiseMod/blob/main/BartizanMod/Core/Other.cs
 
 2 counters, one for the current party, and another with the total of each party throw the years
@@ -36,4 +39,5 @@ settings.json
     "appliWebUrl": "https://script.google.com/macros/s/---yoursscript-----/exec?id=[#ID#]&date=[#DATE#]"
 }
 ```
+
 
