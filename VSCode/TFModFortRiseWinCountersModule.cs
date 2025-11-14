@@ -1,13 +1,16 @@
 ﻿using System;
-using FortRise;
-
-using System.IO;
-using Newtonsoft.Json;
-using System.Linq;
-using System.Globalization;
+using System.Collections.Generic;
 //using TFModFortRiseLoaderAI;
 using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using FortRise;
+using Microsoft.Xna.Framework;
 using MonoMod.ModInterop;
+using Newtonsoft.Json;
+//using IL.TowerFall;
+using TowerFall;
 
 namespace TFModFortRiseWinCounters
 {
@@ -24,10 +27,10 @@ namespace TFModFortRiseWinCounters
 
     public TFModFortRiseWinCountersModule() 
     {
-      //if (!Debugger.IsAttached)
-      //{
-      //  Debugger.Launch(); // Proposera d’attacher Visual Studio
-      //}
+      if (!Debugger.IsAttached)
+      {
+        //Debugger.Launch(); // Proposera d’attacher Visual Studio
+      }
       Instance = this;
       //Logger.Init("ModWinCounters");
       ApiStat = new APIStat(".\\Mods\\tf-mod-fortrise-wincounters\\settings.json");
@@ -74,10 +77,24 @@ namespace TFModFortRiseWinCounters
       }
     }
 
-
+    public static String getTeamName() {
+      String TeamName = "";
+      List<String> playerNames = new List<String>();
+      for (int playerIndex = 0; playerIndex < TFGame.Players.Length; playerIndex++)
+      {
+        if (TFGame.Players[playerIndex])
+        {
+          playerNames.Add(CustomNameImport.GetPlayerName(playerIndex));
+        }
+      }
+      playerNames.Sort();
+      TeamName = String.Join("-", playerNames);
+      return TeamName;
+    }
     public static string getFileSuffix() {
 
-      return Settings.getTeamName();
+      return getTeamName();
+
     }
 
     public static void SaveCurrentResult()
@@ -91,7 +108,7 @@ namespace TFModFortRiseWinCounters
       {
         if (Settings.useOnlineStat)
         {
-          ApiStat.PostStat(Settings.getTeamName(), today, JsonConvert.SerializeObject(MyVersusMatchResults.winCounter, Formatting.Indented));
+          ApiStat.PostStat(getTeamName(), today, JsonConvert.SerializeObject(MyVersusMatchResults.winCounter, Formatting.Indented));
           //return; //always save online AND local
         }
         string json = JsonConvert.SerializeObject(MyVersusMatchResults.winCounter, Formatting.Indented);
@@ -109,7 +126,7 @@ namespace TFModFortRiseWinCounters
       string today = DateTime.Now.ToString("yyyy-MM-dd");
       //ONLINE STAT
       if (Settings.useOnlineStat) {
-        APIStat.Sheet sheet = ApiStat.GetStat(Settings.getTeamName(), today);
+        APIStat.Sheet sheet = ApiStat.GetStat(getTeamName(), today);
         if (sheet.error != null)
         {
           return;
