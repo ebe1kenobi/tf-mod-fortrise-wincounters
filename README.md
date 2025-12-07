@@ -1,3 +1,61 @@
+2025/12/07 : New format json for saved stat and new stat 
+
+```
+"{
+  ""todayWin"": {
+    ""P2"": 2
+  },
+  ""totalWin"": {
+    ""P2"": 2
+  },
+  ""today"": {
+    ""P1"": {
+      ""win"": 0,
+      ""kill"": 0,
+      ""death"": 2,
+      ""self"": 0,
+      ""killFrom"": {
+        ""Arrow"": 2
+      },
+      ""killBy"": {
+        ""P2"": 2
+      }
+    },
+    ""P2"": {
+      ""win"": 2,
+      ""kill"": 2,
+      ""death"": 0,
+      ""self"": 0,
+      ""killFrom"": {},
+      ""killBy"": {}
+    }
+  },
+  ""total"": {
+    ""P1"": {
+      ""win"": 0,
+      ""kill"": 0,
+      ""death"": 2,
+      ""self"": 0,
+      ""killFrom"": {
+        ""Arrow"": 2
+      },
+      ""killBy"": {
+        ""P2"": 2
+      }
+    },
+    ""P2"": {
+      ""win"": 2,
+      ""kill"": 2,
+      ""death"": 0,
+      ""self"": 0,
+      ""killFrom"": {},
+      ""killBy"": {}
+    }
+  },
+  ""date"": ""2025-12-07-18""
+}"
+```
+
 2025/10/20 : Need Mod "Custom Name" https://github.com/ebe1kenobi/tf-mod-fortrise-custom-name, it will now save the stat with the name instead of the color of the player. So the player can change his archer when he wants. 
 
 
@@ -39,5 +97,6 @@ settings.json
     "appliWebUrl": "https://script.google.com/macros/s/---yoursscript-----/exec?id=[#ID#]&date=[#DATE#]"
 }
 ```
+
 
 
