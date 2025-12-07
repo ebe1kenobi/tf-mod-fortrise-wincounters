@@ -23,7 +23,7 @@ namespace TFModFortRiseWinCounters
     public static TFModFortRiseWinCountersSettings Settings => (TFModFortRiseWinCountersSettings)Instance.InternalSettings;
 
     public static APIStat ApiStat;
-    public static bool ReloadNecessary = false;
+    //public static bool ReloadNecessary = false;
 
     public TFModFortRiseWinCountersModule() 
     {
@@ -32,7 +32,7 @@ namespace TFModFortRiseWinCounters
         //Debugger.Launch(); // Proposera d’attacher Visual Studio
       }
       Instance = this;
-      //Logger.Init("ModWinCounters");
+      Logger.Init("ModWinCounters");
       ApiStat = new APIStat(".\\Mods\\tf-mod-fortrise-wincounters\\settings.json");
     }
 
@@ -42,22 +42,25 @@ namespace TFModFortRiseWinCounters
 
     public override void Load()
     {
-      MyMainMenu.Load();
+      //MyMainMenu.Load();
       MyVersusPlayerMatchResults.Load();
       MyVersusMatchResults.Load();
       MyPlayerIndicator.Load();
       MyVersusRoundResults.Load();
-
+      MySession.Load();
+      MyRollcallElement.Load();
       typeof(CustomNameImport).ModInterop();
     }
 
     public override void Unload()
     {
-      MyMainMenu.Unload();
+      //MyMainMenu.Unload();
       MyVersusPlayerMatchResults.Unload();
       MyVersusMatchResults.Unload();
       MyPlayerIndicator.Unload();
       MyVersusRoundResults.Unload();
+      MySession.Unload();
+      MyRollcallElement.Unload();
     }
 
     public static void LoadFromFile(string filePath, bool loadOnlyTotal)
@@ -70,6 +73,8 @@ namespace TFModFortRiseWinCounters
           if (loadOnlyTotal) {
             MyVersusMatchResults.winCounter.resetToday();
           }
+          moveResultForV3Format();
+
         }
       }
       catch (Exception ex)
@@ -149,6 +154,8 @@ namespace TFModFortRiseWinCounters
         else {
           MyVersusMatchResults.winCounter.resetToday();
         }
+        // v3 : move totla result in new format
+        moveResultForV3Format();
         return;
       }
 
@@ -189,6 +196,23 @@ namespace TFModFortRiseWinCounters
         // On prend le plus récent
         string lastFile = files.First().Path;
         TFModFortRiseWinCountersModule.LoadFromFile(lastFile, true);
+      }
+    }
+
+    public static void moveResultForV3Format() {
+      foreach (var name in MyVersusMatchResults.winCounter.totalWin) {
+        if (MyVersusMatchResults.winCounter.totalWin.ContainsKey(name.Key)
+              && MyVersusMatchResults.winCounter.totalWin[name.Key] > 0){
+          if (!MyVersusMatchResults.winCounter.total.ContainsKey(name.Key))
+          {
+            MyVersusMatchResults.winCounter.total[name.Key] = new PlayerStatData();
+            MyVersusMatchResults.winCounter.total[name.Key].win = MyVersusMatchResults.winCounter.totalWin[name.Key];
+          } else {
+            if (MyVersusMatchResults.winCounter.total[name.Key].win == 0) {
+              MyVersusMatchResults.winCounter.total[name.Key].win = MyVersusMatchResults.winCounter.totalWin[name.Key];
+            }
+          }
+        } 
       }
     }
   }

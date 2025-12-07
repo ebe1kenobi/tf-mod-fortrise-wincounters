@@ -25,11 +25,11 @@ namespace TFModFortRiseWinCounters
 
       if (!TFModFortRiseWinCountersModule.Settings.enable) return;
 
-      if (TFModFortRiseWinCountersModule.ReloadNecessary) //TODO test !message not displayed 
-      {
-        TFModFortRiseWinCountersModule.loadPreviousResultIfExists();
-        TFModFortRiseWinCountersModule.ReloadNecessary = false;
-      }
+      //if (TFModFortRiseWinCountersModule.ReloadNecessary) //TODO test !message not displayed 
+      //{
+      //  TFModFortRiseWinCountersModule.loadPreviousResultIfExists();
+      //  TFModFortRiseWinCountersModule.ReloadNecessary = false;
+      //}
 
       if (TFModFortRiseWinCountersModule.Settings.resetTodayCounter)
       {
@@ -43,7 +43,8 @@ namespace TFModFortRiseWinCounters
 
         if (session.MatchStats[playerIndex].Won)
         {
-          winCounter.increment(CustomNameImport.GetPlayerName(playerIndex));
+          //winCounter.increment(CustomNameImport.GetPlayerName(playerIndex));
+          winCounter.addWinner(CustomNameImport.GetPlayerName(playerIndex));
         }
       }
 
