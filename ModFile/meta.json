@@ -1,6 +1,6 @@
 {
 	"name": "Win Counters",
-	"version": "0.0.6",
+	"version": "0.0.7",
 	"required": "4.1.0",
 	"author": "ebe1.kenobi",
 	"description": "Show the win counter for each player in the result match screen, reset only when game restart, and can select a player name from file playernName.json with left trigger, and add stat kill/death/self/kill by who and from what",

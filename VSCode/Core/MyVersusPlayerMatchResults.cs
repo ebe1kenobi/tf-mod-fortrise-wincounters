@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
+using MonoMod;
 using TowerFall;
 
 namespace TFModFortRiseWinCounters
@@ -52,6 +53,31 @@ namespace TFModFortRiseWinCounters
                     );
         text.Render();
       }
+      //var dynData = DynamicData.For(self);
+      
+      //if (TFGame.PlayerInputs[playerIndex] == null) {
+      //    Logger.Info("PlayerInputs is null");
+      //  return;
+      //}
+
+      //InputState inputState = TFGame.PlayerInputs[playerIndex].GetState();
+          //Logger.Info(inputState.ToString());
+      //if (input == null) {
+      //  return;
+      //}
+      //InputState inputState = input.Invoke<InputState>("GetState");
+      //if (inputState.ArrowsPressed)
+      //{
+      //    Logger.Info("inputState.ArrowsPressed");
+      //  self.Scene.Add(new Test());
+      //}
     }
   }
+
+  //class Test: Entity {
+  //   public Test()
+  //    {
+  //        Add(new Text(TFGame.Font, "test", new Vector2(60, 60)));
+  //    }
+  //  }
 }
