@@ -156,6 +156,33 @@ namespace TFModFortRiseWinCounters
         }
         // v3 : move totla result in new format
         moveResultForV3Format();
+        //set all player name 
+        for (int i = 0; i < TFGame.Players.Length; i++)
+        {
+          if (TFGame.Players[i])
+          {
+            string playerName = CustomNameImport.GetPlayerName(i);
+            if (!MyVersusMatchResults.winCounter.total.ContainsKey(playerName))
+            {
+              MyVersusMatchResults.winCounter.total[playerName] = new PlayerStatData();
+            }
+
+            if (!MyVersusMatchResults.winCounter.today.ContainsKey(playerName))
+            {
+              MyVersusMatchResults.winCounter.today[playerName] = new PlayerStatData();
+            }
+
+            if (!MyVersusMatchResults.winCounter.todayWin.ContainsKey(playerName))
+            {
+              MyVersusMatchResults.winCounter.todayWin[playerName] = 0;
+            }
+
+            if (!MyVersusMatchResults.winCounter.totalWin.ContainsKey(playerName))
+            {
+              MyVersusMatchResults.winCounter.totalWin[playerName] = 0;
+            }
+          }
+        }
         return;
       }
 
