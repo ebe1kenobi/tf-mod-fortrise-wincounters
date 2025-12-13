@@ -1,41 +1,39 @@
-﻿using System.Threading.Tasks;
-using MonoMod.Utils;
-using TowerFall;
-using System;
+﻿using System;
 using System.Collections;
 using System.ComponentModel;
 using System.Reflection;
-using MonoMod.RuntimeDetour.HookGen;
-using Monocle;
-using TowerFall;
-using Microsoft.Xna.Framework;
 using System.Text;
+using System.Threading.Tasks;
+using HarmonyLib;
+using Microsoft.Xna.Framework;
+using Monocle;
+using MonoMod.Utils;
+using TowerFall;
+using FortRise;
 
 //todo order name in popup by name
 // decrease font size to fit more data
 
 namespace TFModFortRiseWinCounters
 {
-  internal class MyVersusMatchResults
+  internal class MyVersusMatchResults : IHookable
   {
     public static WinCounterData winCounter = new WinCounterData();
 
-    internal static void Load()
+    public static void Load(IHarmony harmony)
     {
-      On.TowerFall.VersusMatchResults.ctor += ctor_patch;
-      //On.TowerFall.VersusMatchResults.PopupSequence += PopupSequence_patch;
+      harmony.Patch(
+          AccessTools.DeclaredConstructor(typeof(VersusMatchResults), [
+                                                                        typeof(Session),
+                                                                        typeof(VersusRoundResults),
+                                                                    ]),
+          postfix: new HarmonyMethod(ctor_patch)
+      );
     }
 
-    internal static void Unload()
+    public static void ctor_patch(VersusMatchResults __instance, global::TowerFall.Session session, global::TowerFall.VersusRoundResults roundResults)
     {
-      On.TowerFall.VersusMatchResults.ctor -= ctor_patch;
-      //On.TowerFall.VersusMatchResults.PopupSequence -= PopupSequence_patch;
-    }
-
-    public static void ctor_patch(On.TowerFall.VersusMatchResults.orig_ctor orig, global::TowerFall.VersusMatchResults self, global::TowerFall.Session session, global::TowerFall.VersusRoundResults roundResults)
-    {
-      orig(self, session, roundResults);
-
+      //TFModFortRiseWinCounters.Logger.Info($"MyVersusMatchResults ctor_patch ");
       if (!TFModFortRiseWinCountersModule.Settings.enable) return;
 
       //if (TFModFortRiseWinCountersModule.ReloadNecessary) //TODO test !message not displayed
@@ -62,16 +60,18 @@ namespace TFModFortRiseWinCounters
       }
 
       //need to save each time
+      //TFModFortRiseWinCounters.Logger.Info($"MyVersusMatchResults StartNew ");
+
       Task.Factory.StartNew(() => TFModFortRiseWinCountersModule.SaveCurrentResult());
 
       // Ajouter un Entity pour surveiller les inputs du bouton Y
       // Utiliser un Alarm car self.Scene peut être null dans le constructeur
-      Alarm.Set(self, 1, delegate
+      Alarm.Set(__instance, 1, delegate
       {
-        if (self.Scene != null)
+        if (__instance.Scene != null)
         {
           StatsInputWatcher watcher = new StatsInputWatcher();
-          self.Scene.Add(watcher);
+          __instance.Scene.Add(watcher);
         }
       }, Alarm.AlarmMode.Oneshot);
     }

@@ -4,7 +4,6 @@ using System.IO;
 using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 using TowerFall;
-using static MonoMod.InlineRT.MonoModRule;
 
 namespace TFModFortRiseWinCounters
 {
@@ -13,11 +12,11 @@ namespace TFModFortRiseWinCounters
     public const String version = "v3";
     public String date { get; set; }
 
-    public Dictionary<String, int> todayWin = new Dictionary<String, int>();
-    public Dictionary<String, int> totalWin = new Dictionary<String, int>();
+    public Dictionary<String, int> todayWin { get; set; } = new Dictionary<String, int>();
+    public Dictionary<String, int> totalWin { get; set; } = new Dictionary<String, int>();
 
-    public Dictionary<String, PlayerStatData> today = new Dictionary<String, PlayerStatData>();
-    public Dictionary<String, PlayerStatData> total = new Dictionary<String, PlayerStatData>();
+    public Dictionary<String, PlayerStatData> today { get; set; } = new Dictionary<String, PlayerStatData>();
+    public Dictionary<String, PlayerStatData> total { get; set; } = new Dictionary<String, PlayerStatData>();
 
     public WinCounterData() {
     }

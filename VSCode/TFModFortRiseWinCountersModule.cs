@@ -5,62 +5,61 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Text.Json;
 using FortRise;
+using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
 using MonoMod.ModInterop;
-using Newtonsoft.Json;
+//using Newtonsoft.Json;
 //using IL.TowerFall;
 using TowerFall;
+using static TFModFortRiseWinCounters.APIStat;
 
 namespace TFModFortRiseWinCounters
 {
-  [Fort("com.ebe1.kenobi.tfmodfortrisewincounters", "TFModFortRiseWinCountersModule")]
-  public class TFModFortRiseWinCountersModule : FortModule
+  public class TFModFortRiseWinCountersModule : Mod
   {
     public static TFModFortRiseWinCountersModule Instance;
+    public static string settingsFilePath = @".\FortRise\Mods\tf-mod-fortrise-wincounters\settings.json";
 
-    public override Type SettingsType => typeof(TFModFortRiseWinCountersSettings);
-    public static TFModFortRiseWinCountersSettings Settings => (TFModFortRiseWinCountersSettings)Instance.InternalSettings;
+    internal Type[] Hookables = [
+        typeof(MyPlayerIndicator),
+        typeof(MyRollcallElement),
+        typeof(MySession),
+        typeof(MyVersusMatchResults),
+        typeof(MyVersusPlayerMatchResults),
+    ];
+
+    //public override Type SettingsType => typeof(TFModFortRiseWinCountersSettings);
+    //public static TFModFortRiseWinCountersSettings Settings => (TFModFortRiseWinCountersSettings)Instance.InternalSettings;
+    public static TFModFortRiseWinCountersSettings Settings => Instance.GetSettings<TFModFortRiseWinCountersSettings>()!;
 
     public static APIStat ApiStat;
     //public static bool ReloadNecessary = false;
 
-    public TFModFortRiseWinCountersModule() 
+    public TFModFortRiseWinCountersModule(IModContent content, IModuleContext context, ILogger logger) : base(content, context, logger)
     {
       if (!Debugger.IsAttached)
       {
         //Debugger.Launch(); // Proposera d’attacher Visual Studio
       }
+      System.Net.ServicePointManager.SecurityProtocol =
+          SecurityProtocolType.Tls12;
       Instance = this;
-      Logger.Init("ModWinCounters");
-      ApiStat = new APIStat(".\\Mods\\tf-mod-fortrise-wincounters\\settings.json");
-    }
-
-    public override void LoadContent()
-    {
-    }
-
-    public override void Load()
-    {
-      //MyMainMenu.Load();
-      MyVersusPlayerMatchResults.Load();
-      MyVersusMatchResults.Load();
-      MyPlayerIndicator.Load();
-      MyVersusRoundResults.Load();
-      MySession.Load();
-      MyRollcallElement.Load();
+      //TFModFortRiseWinCounters.Logger.Init("ModWinCounters");
+      ApiStat = new APIStat(settingsFilePath);
       typeof(CustomNameImport).ModInterop();
+
+      foreach (var hookable in Hookables)
+      {
+        hookable.GetMethod(nameof(IHookable.Load))!.Invoke(null, [context.Harmony]);
+      }
     }
 
-    public override void Unload()
+    public override ModuleSettings CreateSettings()
     {
-      //MyMainMenu.Unload();
-      MyVersusPlayerMatchResults.Unload();
-      MyVersusMatchResults.Unload();
-      MyPlayerIndicator.Unload();
-      MyVersusRoundResults.Unload();
-      MySession.Unload();
-      MyRollcallElement.Unload();
+      return new TFModFortRiseWinCountersSettings();
     }
 
     public static void LoadFromFile(string filePath, bool loadOnlyTotal)
@@ -68,7 +67,9 @@ namespace TFModFortRiseWinCounters
       try
       {
         string json = File.ReadAllText(filePath);
-        MyVersusMatchResults.winCounter = JsonConvert.DeserializeObject<WinCounterData>(json);
+        //MyVersusMatchResults.winCounter = JsonConvert.DeserializeObject<WinCounterData>(json);
+        MyVersusMatchResults.winCounter =  JsonSerializer.Deserialize<WinCounterData>(json);
+
         if (MyVersusMatchResults.winCounter != null) {
           if (loadOnlyTotal) {
             MyVersusMatchResults.winCounter.resetToday();
@@ -79,6 +80,7 @@ namespace TFModFortRiseWinCounters
       }
       catch (Exception ex)
       {
+        ;
       }
     }
 
@@ -104,6 +106,7 @@ namespace TFModFortRiseWinCounters
 
     public static void SaveCurrentResult()
     {
+      //TFModFortRiseWinCounters.Logger.Info($"SaveCurrentResult");
       string today = DateTime.Now.ToString("yyyy-MM-dd");
       string fileName = today + "-" + getFileSuffix() + "-wincounters.json";
 
@@ -111,21 +114,62 @@ namespace TFModFortRiseWinCounters
 
       try
       {
+        var data = JsonSerializer.Serialize(MyVersusMatchResults.winCounter, new JsonSerializerOptions
+        {
+          WriteIndented = true
+        });
         if (Settings.useOnlineStat)
         {
-          ApiStat.PostStat(getTeamName(), today, JsonConvert.SerializeObject(MyVersusMatchResults.winCounter, Formatting.Indented));
+          ApiStat.PostStat(getTeamName(), today, data);
           //return; //always save online AND local
         }
-        string json = JsonConvert.SerializeObject(MyVersusMatchResults.winCounter, Formatting.Indented);
-        File.WriteAllText(fileName, json);
+        //string json = data;
+        File.WriteAllText(fileName, data);
       }
       catch (Exception ex)
       {
       }
     }
 
+    public static void initPlayerData() {
+      //set all player name 
+      //TFModFortRiseWinCounters.Logger.Info($"initPlayerData");
+      for (int i = 0; i < TFGame.Players.Length; i++)
+      {
+
+        if (TFGame.Players[i])
+        {
+          string playerName = CustomNameImport.GetPlayerName(i);
+          //TFModFortRiseWinCounters.Logger.Info($"playerName {playerName}");
+          if (!MyVersusMatchResults.winCounter.total.ContainsKey(playerName))
+          {
+            //TFModFortRiseWinCounters.Logger.Info($"playerName {playerName}  create total[playerName]");
+            MyVersusMatchResults.winCounter.total[playerName] = new PlayerStatData();
+          }
+
+          if (!MyVersusMatchResults.winCounter.today.ContainsKey(playerName))
+          {
+            //TFModFortRiseWinCounters.Logger.Info($"playerName {playerName}  create today[playerName]");
+            MyVersusMatchResults.winCounter.today[playerName] = new PlayerStatData();
+          }
+
+          if (!MyVersusMatchResults.winCounter.todayWin.ContainsKey(playerName))
+          {
+            //TFModFortRiseWinCounters.Logger.Info($"playerName {playerName}  create todayWin[playerName]");
+            MyVersusMatchResults.winCounter.todayWin[playerName] = 0;
+          }
+
+          if (!MyVersusMatchResults.winCounter.totalWin.ContainsKey(playerName))
+          {
+            //TFModFortRiseWinCounters.Logger.Info($"playerName {playerName}  create totalWin[playerName]");
+            MyVersusMatchResults.winCounter.totalWin[playerName] = 0;
+          }
+        }
+      }
+    }
     public static void loadPreviousResultIfExists()
     {
+      //TFModFortRiseWinCounters.Logger.Info($"loadPreviousResultIfExists");
       MyVersusMatchResults.winCounter.clear();
 
       string today = DateTime.Now.ToString("yyyy-MM-dd");
@@ -134,11 +178,13 @@ namespace TFModFortRiseWinCounters
         APIStat.Sheet sheet = ApiStat.GetStat(getTeamName(), today);
         if (sheet.error != null)
         {
+          initPlayerData();
           return;
         }
         
         //WinCounterData data = JsonConvert.DeserializeObject<WinCounterData>(sheet.value);
-        MyVersusMatchResults.winCounter = JsonConvert.DeserializeObject<WinCounterData>(sheet.value);
+        //MyVersusMatchResults.winCounter = JsonConvert.DeserializeObject<WinCounterData>(sheet.value);
+        MyVersusMatchResults.winCounter = JsonSerializer.Deserialize<WinCounterData>(sheet.value);
 
         if (today.Equals(sheet.date) || //problem if playing 2 following days
             //if we pass midnigth
@@ -156,33 +202,8 @@ namespace TFModFortRiseWinCounters
         }
         // v3 : move totla result in new format
         moveResultForV3Format();
-        //set all player name 
-        for (int i = 0; i < TFGame.Players.Length; i++)
-        {
-          if (TFGame.Players[i])
-          {
-            string playerName = CustomNameImport.GetPlayerName(i);
-            if (!MyVersusMatchResults.winCounter.total.ContainsKey(playerName))
-            {
-              MyVersusMatchResults.winCounter.total[playerName] = new PlayerStatData();
-            }
-
-            if (!MyVersusMatchResults.winCounter.today.ContainsKey(playerName))
-            {
-              MyVersusMatchResults.winCounter.today[playerName] = new PlayerStatData();
-            }
-
-            if (!MyVersusMatchResults.winCounter.todayWin.ContainsKey(playerName))
-            {
-              MyVersusMatchResults.winCounter.todayWin[playerName] = 0;
-            }
-
-            if (!MyVersusMatchResults.winCounter.totalWin.ContainsKey(playerName))
-            {
-              MyVersusMatchResults.winCounter.totalWin[playerName] = 0;
-            }
-          }
-        }
+        initPlayerData();
+        
         return;
       }
 

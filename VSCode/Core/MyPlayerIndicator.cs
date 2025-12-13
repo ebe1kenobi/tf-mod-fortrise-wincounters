@@ -1,26 +1,30 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FortRise;
+using HarmonyLib;
+using Microsoft.Xna.Framework;
 using MonoMod.Utils;
+using TowerFall;
 
 namespace TFModFortRiseWinCounters
 {
-  public class MyPlayerIndicator
+  public class MyPlayerIndicator : IHookable
   {
-    internal static void Load()
+    public static void Load(IHarmony harmony)
     {
-      On.TowerFall.PlayerIndicator.ctor += ctor_patch;
-    }
-
-    internal static void Unload()
-    {
-      On.TowerFall.PlayerIndicator.ctor -= ctor_patch;
+      harmony.Patch(
+          AccessTools.DeclaredConstructor(typeof(PlayerIndicator), [
+                                                                        typeof(Vector2),
+                                                                        typeof(int),
+                                                                        typeof(bool)
+                                                                    ]),
+          postfix: new HarmonyMethod(ctor_patch)
+      );
     }
 
     public MyPlayerIndicator() { }
 
-    public static void ctor_patch(On.TowerFall.PlayerIndicator.orig_ctor orig, global::TowerFall.PlayerIndicator self, Vector2 offset, int playerIndex, bool crown)
+    public static void ctor_patch(PlayerIndicator __instance, Vector2 offset, int playerIndex, bool crown)
     {
-      orig(self, offset, playerIndex, crown);
-      var dynData = DynamicData.For(self);
+      var dynData = DynamicData.For(__instance);
       dynData.Set("text", CustomNameImport.GetPlayerName(playerIndex));
       dynData.Dispose();
     }

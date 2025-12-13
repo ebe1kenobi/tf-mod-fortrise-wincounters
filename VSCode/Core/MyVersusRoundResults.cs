@@ -1,34 +1,35 @@
-﻿using Monocle;
+﻿using System;
+using FortRise;
+using HarmonyLib;
+using Monocle;
 using MonoMod.Utils;
-using System;
+using TowerFall;
 //using TFModFortRiseWinCounters;
 
 namespace TFModFortRiseWinCounters
 {
-  public class MyVersusRoundResults
+  public class MyVersusRoundResults : IHookable
   {
-    internal static void Load()
+    public static void Load(IHarmony harmony)
     {
-      On.TowerFall.VersusRoundResults.Update += Update_patch;
+      harmony.Patch(
+          AccessTools.DeclaredMethod(typeof(VersusRoundResults), nameof(VersusRoundResults.Update)),
+          prefix: new HarmonyMethod(Update_patch)
+      );
     }
 
-    internal static void Unload()
-    {
-      On.TowerFall.VersusRoundResults.Update -= Update_patch;
-    }
     public MyVersusRoundResults() { }
 
-    public static void Update_patch(On.TowerFall.VersusRoundResults.orig_Update orig, global::TowerFall.VersusRoundResults self)
+    public static void Update_patch(VersusRoundResults __instance)
     {
-      if (self.Components == null)
+      if (__instance.Components == null)
       {
-        orig(self);
         return;
       }
-      for (var i = 0; i < self.Components.Count; i++)
+      for (var i = 0; i < __instance.Components.Count; i++)
       {
-        if (self.Components[i].GetType().ToString() != "Monocle.Text") continue;
-        Text text = (Text)self.Components[i];
+        if (__instance.Components[i].GetType().ToString() != "Monocle.Text") continue;
+        Text text = (Text)__instance.Components[i];
         var dynData = DynamicData.For(text);
         String textText = (String)dynData.Get("text");
         if (textText.Length == 0) continue;
@@ -39,7 +40,6 @@ namespace TFModFortRiseWinCounters
         text.Position.X = 20;
         dynData.Dispose();
       }
-      orig(self);
     }
   }
 }

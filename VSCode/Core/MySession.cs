@@ -1,22 +1,22 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FortRise;
+using HarmonyLib;
+using Microsoft.Xna.Framework;
 using MonoMod.Utils;
 using TowerFall;
 
 namespace TFModFortRiseWinCounters
 {
-  public class MySession
+  public class MySession : IHookable
   {
-    internal static void Load()
+    public static void Load(IHarmony harmony)
     {
-      On.TowerFall.Session.OnPlayerDeath += OnPlayerDeath_patch;
+      harmony.Patch(
+          AccessTools.DeclaredMethod(typeof(Session), nameof(Session.OnPlayerDeath)),
+          postfix: new HarmonyMethod(OnPlayerDeath_patch)
+      );
     }
 
-    internal static void Unload()
-    {
-      On.TowerFall.Session.OnPlayerDeath -= OnPlayerDeath_patch;
-    }
-    public static void OnPlayerDeath_patch(On.TowerFall.Session.orig_OnPlayerDeath orig, global::TowerFall.Session self, global::TowerFall.Player player, global::TowerFall.PlayerCorpse corpse, int playerIndex, DeathCause deathType, Vector2 position, int killerIndex) {
-      orig(self, player, corpse, playerIndex, deathType, position, killerIndex);
+    public static void OnPlayerDeath_patch(Session __instance, Player player, PlayerCorpse corpse, int playerIndex, DeathCause deathType, Vector2 position, int killerIndex) {
       MyVersusMatchResults.winCounter.addStat(playerIndex, deathType, killerIndex);
     }
   }

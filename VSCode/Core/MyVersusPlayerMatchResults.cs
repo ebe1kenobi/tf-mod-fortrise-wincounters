@@ -1,50 +1,59 @@
 ﻿using System;
 using System.Collections.Generic;
+using FortRise;
+using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Monocle;
-using MonoMod.Utils;
 using MonoMod;
+using MonoMod.Utils;
 using TowerFall;
 
 namespace TFModFortRiseWinCounters
 {
-  public class MyVersusPlayerMatchResults
+  public class MyVersusPlayerMatchResults : IHookable
   {
-    internal static void Load()
+    public static void Load(IHarmony harmony)
     {
-      On.TowerFall.VersusPlayerMatchResults.ctor += ctor_patch;
-      On.TowerFall.VersusPlayerMatchResults.Render += Render_patch;
+      harmony.Patch(
+                AccessTools.DeclaredConstructor(typeof(VersusPlayerMatchResults), [
+                                                                  typeof(Session) ,
+                                                                  typeof(VersusMatchResults) , 
+                                                                  typeof(int) , 
+                                                                  typeof(Vector2) , 
+                                                                  typeof(Vector2) , 
+                                                                  typeof(List<AwardInfo>)
+                                                                          ]),
+                postfix: new HarmonyMethod(ctor_patch)
+            );
+
+      harmony.Patch(
+          AccessTools.DeclaredMethod(typeof(VersusPlayerMatchResults), nameof(VersusPlayerMatchResults.Render)),
+          postfix: new HarmonyMethod(Render_patch)
+      );
     }
 
-    internal static void Unload()
-    {
-      On.TowerFall.VersusPlayerMatchResults.ctor -= ctor_patch;
-      On.TowerFall.VersusPlayerMatchResults.Render -= Render_patch;
-    }
 
-    private static void ctor_patch(On.TowerFall.VersusPlayerMatchResults.orig_ctor orig, TowerFall.VersusPlayerMatchResults self, Session session, VersusMatchResults matchResults, int playerIndex, Vector2 tweenFrom, Vector2 tweenTo, List<AwardInfo> awards)
+    private static void ctor_patch(VersusPlayerMatchResults __instance, Session session, VersusMatchResults matchResults, int playerIndex, Vector2 tweenFrom, Vector2 tweenTo, List<AwardInfo> awards)
     {
-      orig(self, session, matchResults, playerIndex, tweenFrom, tweenTo, awards);
       
       if (!TFModFortRiseWinCountersModule.Settings.enable) return;
 
-      var dynData = DynamicData.For(self);
+      var dynData = DynamicData.For(__instance);
       var gem = dynData.Get<Sprite<string>>("gem");
       var winText = new OutlineText(TFGame.Font, "-", gem.Position);
       winText.Color = Color.White;
       winText.OutlineColor = Color.Black;
-      self.Add(winText);
+      __instance.Add(winText);
       dynData.Set("winText", winText);
     }
 
-    private static void Render_patch(On.TowerFall.VersusPlayerMatchResults.orig_Render orig, TowerFall.VersusPlayerMatchResults self)
+    private static void Render_patch(VersusPlayerMatchResults __instance)
     {
-      orig(self);
 
       if (!TFModFortRiseWinCountersModule.Settings.enable) return;
 
-      var playerIndex = DynamicData.For(self).Get<int>("playerIndex");
-      if (DynamicData.For(self).TryGet<OutlineText>("winText", out var text)){
+      var playerIndex = DynamicData.For(__instance).Get<int>("playerIndex");
+      if (DynamicData.For(__instance).TryGet<OutlineText>("winText", out var text)){
 
         text.DrawText = MyVersusMatchResults.winCounter.getTodayWin(CustomNameImport.GetPlayerName(playerIndex)) 
                     + (TFModFortRiseWinCountersModule.Settings.displayTotalWin
