@@ -32,7 +32,7 @@ namespace TFModFortRiseWinCounters
         //Debugger.Launch(); // Proposera d’attacher Visual Studio
       }
       Instance = this;
-      Logger.Init("ModWinCounters");
+      //Logger.Init("ModWinCounters");
       ApiStat = new APIStat(".\\Mods\\tf-mod-fortrise-wincounters\\settings.json");
     }
 

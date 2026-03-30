@@ -34,6 +34,8 @@ namespace TFModFortRiseWinCounters
 
     public static void ctor_patch(On.TowerFall.VersusMatchResults.orig_ctor orig, global::TowerFall.VersusMatchResults self, global::TowerFall.Session session, global::TowerFall.VersusRoundResults roundResults)
     {
+      //Logger.Info("MyVersusMatchResults");
+
       orig(self, session, roundResults);
 
       if (!TFModFortRiseWinCountersModule.Settings.enable) return;
@@ -60,6 +62,9 @@ namespace TFModFortRiseWinCounters
           winCounter.addWinner(CustomNameImport.GetPlayerName(playerIndex));
         }
       }
+      
+      winCounter.addMatchResult(session);
+
 
       //need to save each time
       Task.Factory.StartNew(() => TFModFortRiseWinCountersModule.SaveCurrentResult());

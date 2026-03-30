@@ -10,11 +10,13 @@ namespace TFModFortRiseWinCounters
 {
   internal class WinCounterData
   {
-    public const String version = "v3";
+    public String version = "v4";
     public String date { get; set; }
 
     public Dictionary<String, int> todayWin = new Dictionary<String, int>();
     public Dictionary<String, int> totalWin = new Dictionary<String, int>();
+    //public Dictionary<String, int> matchResult = new Dictionary<String, int>();
+    public List<Dictionary<string, int>> matchsResults = new List<Dictionary<string, int>>();
 
     public Dictionary<String, PlayerStatData> today = new Dictionary<String, PlayerStatData>();
     public Dictionary<String, PlayerStatData> total = new Dictionary<String, PlayerStatData>();
@@ -81,6 +83,31 @@ namespace TFModFortRiseWinCounters
       }
       today[name].win++;
       total[name].win++;
+    }
+
+    public void addMatchResult(Session session)
+    {
+      //Logger.Info("addMatchResult");
+
+      Dictionary<String, int> matchResult = new Dictionary<String, int>();
+      for (int i = 0; i < session.Scores.Length; i++)
+      {
+        if (!TFGame.Players[i]) continue;
+        matchResult[CustomNameImport.GetPlayerName(i)] = session.Scores[i];
+      }
+      matchsResults.Add(matchResult);
+
+      //foreach (var match in matchsResults)
+      //{
+      //  Logger.Info("Nouveau match :");
+
+      //  foreach (var kvp in match)
+      //  {
+      //    Logger.Info($"{kvp.Key} : {kvp.Value}");
+      //  }
+
+      //  Logger.Info("-------------------");
+      //}
     }
 
     public void addStat(int playerIndex, DeathCause deathType, int killerIndex) {
