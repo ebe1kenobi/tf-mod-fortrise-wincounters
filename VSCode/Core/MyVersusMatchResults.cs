@@ -63,7 +63,7 @@ namespace TFModFortRiseWinCounters
         }
       }
       
-      winCounter.addMatchResult(session);
+      winCounter.addMatchResult(session); //todo
 
 
       //need to save each time

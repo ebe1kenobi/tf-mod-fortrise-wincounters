@@ -32,7 +32,7 @@ namespace TFModFortRiseWinCounters
         //Debugger.Launch(); // Proposera d’attacher Visual Studio
       }
       Instance = this;
-      //Logger.Init("ModWinCounters");
+      Logger.Init("ModWinCounters");
       ApiStat = new APIStat(".\\Mods\\tf-mod-fortrise-wincounters\\settings.json");
     }
 
@@ -48,7 +48,8 @@ namespace TFModFortRiseWinCounters
       MyPlayerIndicator.Load();
       MyVersusRoundResults.Load();
       MySession.Load();
-      MyRollcallElement.Load();
+      //MyRollcallElement.Load();
+      MyVersusBeginButton.Load();
       typeof(CustomNameImport).ModInterop();
     }
 
@@ -60,7 +61,8 @@ namespace TFModFortRiseWinCounters
       MyPlayerIndicator.Unload();
       MyVersusRoundResults.Unload();
       MySession.Unload();
-      MyRollcallElement.Unload();
+      MyVersusBeginButton.Unload();
+      //MyRollcallElement.Unload();
     }
 
     public static void LoadFromFile(string filePath, bool loadOnlyTotal)
@@ -74,6 +76,7 @@ namespace TFModFortRiseWinCounters
             MyVersusMatchResults.winCounter.resetToday();
           }
           moveResultForV3Format();
+          moveResultForV4Format();
 
         }
       }
@@ -82,7 +85,8 @@ namespace TFModFortRiseWinCounters
       }
     }
 
-    public static String getTeamName() {
+    public static String getTeamName()
+    {  //todo add mode
       String TeamName = "";
       List<String> playerNames = new List<String>();
       for (int playerIndex = 0; playerIndex < TFGame.Players.Length; playerIndex++)
@@ -93,7 +97,9 @@ namespace TFModFortRiseWinCounters
         }
       }
       playerNames.Sort();
+      playerNames.Insert(0, MainMenu.VersusMatchSettings.Mode.ToString());
       TeamName = String.Join("-", playerNames);
+      Logger.Info(TeamName);
       return TeamName;
     }
     public static string getFileSuffix() {
@@ -131,7 +137,7 @@ namespace TFModFortRiseWinCounters
       string today = DateTime.Now.ToString("yyyy-MM-dd");
       //ONLINE STAT
       if (Settings.useOnlineStat) {
-        APIStat.Sheet sheet = ApiStat.GetStat(getTeamName(), today);
+        APIStat.Sheet sheet = ApiStat.GetStat(getTeamName(), today); 
         if (sheet.error != null)
         {
           return;
@@ -240,6 +246,13 @@ namespace TFModFortRiseWinCounters
             }
           }
         } 
+      }
+    }
+
+    public static void moveResultForV4Format()
+    {
+      if (MyVersusMatchResults.winCounter.mode == null|| MyVersusMatchResults.winCounter.mode == "" ) {
+        MyVersusMatchResults.winCounter.mode = Modes.HeadHunters.ToString();
       }
     }
   }

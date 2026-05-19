@@ -11,6 +11,7 @@ namespace TFModFortRiseWinCounters
   internal class WinCounterData
   {
     public String version = "v4";
+    public String mode = "todo";
     public String date { get; set; }
 
     public Dictionary<String, int> todayWin = new Dictionary<String, int>();
@@ -93,9 +94,23 @@ namespace TFModFortRiseWinCounters
       for (int i = 0; i < session.Scores.Length; i++)
       {
         if (!TFGame.Players[i]) continue;
-        matchResult[CustomNameImport.GetPlayerName(i)] = session.Scores[i];
+        string playerName = CustomNameImport.GetPlayerName(i);
+        matchResult[playerName] = session.Scores[i];
+
+        //fill all player keys
+        if (!todayWin.ContainsKey(playerName))
+        {
+          todayWin[playerName] = 0;
+        }
+
+        if (!totalWin.ContainsKey(playerName))
+        {
+          totalWin[playerName] = 0;
+        }
       }
       matchsResults.Add(matchResult);
+
+      // check if all keys exist 
 
       //foreach (var match in matchsResults)
       //{
@@ -115,6 +130,7 @@ namespace TFModFortRiseWinCounters
       //and Player.die
       string playerKilled = CustomNameImport.GetPlayerName(playerIndex);
       string killerPlayer = "";
+      mode = MainMenu.VersusMatchSettings.Mode.ToString();
 
       if (!today.ContainsKey(playerKilled))
       {
