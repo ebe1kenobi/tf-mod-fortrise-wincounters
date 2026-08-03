@@ -7,11 +7,41 @@ using System.Text.Json.Serialization;
 //using Newtonsoft.Json;
 //using Newtonsoft.Json.Serialization;
 using System.Net.Http;
+using FortRise;
 namespace TFModFortRiseWinCounters
 {
   public class APIStat
   {
     private string urlTemplate;
+
+    /// <summary>
+    /// settings.json est livre avec le mod (ModFile/). FortRise 4 le lisait via un
+    /// chemin relatif au repertoire courant (.\FortRise\Mods\...), ce qui ne resout
+    /// plus correctement en FortRise 5. On passe par IModContent : fiable, et
+    /// fonctionne aussi bien en dossier qu'en zip.
+    /// </summary>
+    public APIStat(IModContent content, string fileName)
+    {
+      try
+      {
+        IResourceInfo resource;
+        if (content != null && content.TryGetResource(fileName, out resource))
+        {
+          var config = JsonSerializer.Deserialize<Config>(resource.Text);
+          urlTemplate = config?.appliWebUrl ?? "";
+        }
+        else
+        {
+          TFModFortRiseWinCounters.Logger.Info($"[APIStat] config introuvable : {fileName}");
+          urlTemplate = "";
+        }
+      }
+      catch (Exception ex)
+      {
+        TFModFortRiseWinCounters.Logger.Info($"[APIStat] config illisible : {ex.Message}");
+        urlTemplate = "";
+      }
+    }
 
     public APIStat(string configPath)
     {

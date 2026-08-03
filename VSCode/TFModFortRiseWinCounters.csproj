@@ -1,13 +1,24 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ModLoaderPath>C:\Program Files (x86)\Steam\steamapps\common\TowerFall\FortRise</ModLoaderPath>
+
+    <ModVersion>1.0.7</ModVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="FortRise.Configuration" Version="1.5.6" />
   </ItemGroup>
 
-</Project>
+  <!-- meta.json (+ playerName.json / settings.json) doivent etre copies dans la
+       sortie, sinon la publication automatique n'embarque que la dll et FortRise
+       ne reconnait pas le mod. -->
+  <ItemGroup>
+    <Content Include="../ModFile/**/*.*">
+      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
+</Project>

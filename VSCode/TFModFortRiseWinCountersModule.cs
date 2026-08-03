@@ -10,7 +10,6 @@ using System.Text.Json;
 using FortRise;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
-using MonoMod.ModInterop;
 //using Newtonsoft.Json;
 //using IL.TowerFall;
 using TowerFall;
@@ -21,7 +20,13 @@ namespace TFModFortRiseWinCounters
   public class TFModFortRiseWinCountersModule : Mod
   {
     public static TFModFortRiseWinCountersModule Instance;
-    public static string settingsFilePath = @".\FortRise\Mods\tf-mod-fortrise-wincounters\settings.json";
+    // settings.json est livre avec le mod : lu via IModContent (voir APIStat).
+    public const string SettingsFileName = "settings.json";
+
+    // Les fichiers de stats *-wincounters.json sont des DONNEES generees : elles
+    // vont dans l'espace de sauvegarde du mod. FortRise 4 les ecrivait dans le
+    // repertoire courant, c'est-a-dire le dossier du jeu.
+    public static string SavePath => Path.Combine(ModIO.GetRootPath(), "Saves", Instance.Meta.Name);
 
     internal Type[] Hookables = [
         typeof(MyPlayerIndicator),
@@ -48,8 +53,13 @@ namespace TFModFortRiseWinCounters
           SecurityProtocolType.Tls12;
       Instance = this;
       //TFModFortRiseWinCounters.Logger.Init("ModWinCounters");
-      ApiStat = new APIStat(settingsFilePath);
-      typeof(CustomNameImport).ModInterop();
+      ApiStat = new APIStat(content, SettingsFileName);
+
+      // CustomName n'exporte plus via MonoMod.ModInterop en FortRise 5 : il publie
+      // une interface via GetApi(). Sans cela GetPlayerName restait null.
+      CustomNameImport.Api = context.Interop.GetApi<ICustomNameModApi>("CustomName");
+      if (CustomNameImport.Api == null)
+        TFModFortRiseWinCounters.Logger.Info("[CustomName] mod absent : repli sur les noms P1..P8");
 
       foreach (var hookable in Hookables)
       {
@@ -104,11 +114,24 @@ namespace TFModFortRiseWinCounters
 
     }
 
+    /// <summary>
+    /// Chemin complet d'un fichier de stats, dans l'espace de sauvegarde du mod.
+    /// Le repertoire est cree au besoin.
+    /// </summary>
+    public static string GetStatFilePath(string fileName)
+    {
+      string folder = SavePath;
+      if (!Directory.Exists(folder))
+        Directory.CreateDirectory(folder);
+
+      return Path.Combine(folder, fileName);
+    }
+
     public static void SaveCurrentResult()
     {
       //TFModFortRiseWinCounters.Logger.Info($"SaveCurrentResult");
       string today = DateTime.Now.ToString("yyyy-MM-dd");
-      string fileName = today + "-" + getFileSuffix() + "-wincounters.json";
+      string fileName = GetStatFilePath(today + "-" + getFileSuffix() + "-wincounters.json");
 
       MyVersusMatchResults.winCounter.date = DateTime.Now.ToString("yyyy-MM-dd-HH");
 
@@ -208,7 +231,9 @@ namespace TFModFortRiseWinCounters
       }
 
       //LOCAL STAT
-      string todayFile = today + "-" + getFileSuffix() + "-wincounters.json";
+      // GetStatFilePath cree le repertoire au besoin : l'EnumerateFiles plus bas ne
+      // peut donc pas lever sur un dossier inexistant.
+      string todayFile = GetStatFilePath(today + "-" + getFileSuffix() + "-wincounters.json");
 
       // if not exists all counter are set to 0
       if (File.Exists(todayFile))
@@ -219,7 +244,7 @@ namespace TFModFortRiseWinCounters
 
       //load totalWins from last file found
       var files = Directory
-          .EnumerateFiles(Directory.GetCurrentDirectory(), "*-" + getFileSuffix() + "-wincounters.json")
+          .EnumerateFiles(SavePath, "*-" + getFileSuffix() + "-wincounters.json")
           .Select(path => new
           {
             Path = path,
