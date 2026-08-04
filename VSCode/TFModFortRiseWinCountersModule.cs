@@ -32,6 +32,7 @@ namespace TFModFortRiseWinCounters
         typeof(MyPlayerIndicator),
         typeof(MyRollcallElement),
         typeof(MySession),
+        typeof(MyStatWarning),
         typeof(MyVersusMatchResults),
         typeof(MyVersusPlayerMatchResults),
     ];
@@ -41,6 +42,22 @@ namespace TFModFortRiseWinCounters
     public static TFModFortRiseWinCountersSettings Settings => Instance.GetSettings<TFModFortRiseWinCountersSettings>()!;
 
     public static APIStat ApiStat;
+
+    // Leve quand les stats en ligne n'ont pas pu etre chargees : les compteurs
+    // affiches repartent alors de zero au lieu de refleter l'historique du jour.
+    // MyStatWarning en fait un bandeau en bas de l'ecran, affiche quelques
+    // secondes. Passer a true relance ce compte a rebours meme si le drapeau
+    // etait deja leve, pour qu'un second echec dans la soiree previenne a nouveau.
+    private static bool statsUnavailable;
+    public static bool StatsUnavailable
+    {
+      get { return statsUnavailable; }
+      set
+      {
+        if (value) MyStatWarning.ResetDisplayTimer();
+        statsUnavailable = value;
+      }
+    }
     //public static bool ReloadNecessary = false;
 
     public TFModFortRiseWinCountersModule(IModContent content, IModuleContext context, ILogger logger) : base(content, context, logger)
@@ -52,7 +69,7 @@ namespace TFModFortRiseWinCounters
       System.Net.ServicePointManager.SecurityProtocol =
           SecurityProtocolType.Tls12;
       Instance = this;
-      //TFModFortRiseWinCounters.Logger.Init("ModWinCounters");
+      TFModFortRiseWinCounters.Logger.Init("ModWinCounters");
       ApiStat = new APIStat(content, SettingsFileName);
 
       // CustomName n'exporte plus via MonoMod.ModInterop en FortRise 5 : il publie
@@ -143,14 +160,18 @@ namespace TFModFortRiseWinCounters
         });
         if (Settings.useOnlineStat)
         {
-          ApiStat.PostStat(getTeamName(), today, data);
-          //return; //always save online AND local
+          // L'envoi en ligne ne doit pas empecher la sauvegarde locale : avant,
+          // une exception ici sautait directement au catch et le fichier du jour
+          // n'etait jamais ecrit.
+          if (!ApiStat.PostStat(getTeamName(), today, data))
+            StatsUnavailable = true;
         }
         //string json = data;
         File.WriteAllText(fileName, data);
       }
       catch (Exception ex)
       {
+        TFModFortRiseWinCounters.Logger.Info($"[WinCounters] sauvegarde impossible : {ex.Message}");
       }
     }
 
@@ -199,12 +220,22 @@ namespace TFModFortRiseWinCounters
       //ONLINE STAT
       if (Settings.useOnlineStat) {
         APIStat.Sheet sheet = ApiStat.GetStat(getTeamName(), today);
-        if (sheet.error != null)
+
+        // sheet == null : serveur injoignable ou reponse inexploitable (GetStat a
+        // deja journalise la cause). Auparavant sheet.error levait une NRE dans ce
+        // cas. On repart de compteurs vides et on previent le joueur a l'ecran :
+        // les scores affiches ne refletent pas l'historique.
+        if (sheet == null || sheet.error != null || sheet.value == null)
         {
+          if (sheet != null && sheet.error != null)
+            TFModFortRiseWinCounters.Logger.Info($"[WinCounters] le serveur a renvoye une erreur : {sheet.error}");
+          TFModFortRiseWinCounters.Logger.Info("[WinCounters] statistiques en ligne NON chargees, compteurs remis a zero");
+          StatsUnavailable = true;
           initPlayerData();
           return;
         }
-        
+        StatsUnavailable = false;
+
         //WinCounterData data = JsonConvert.DeserializeObject<WinCounterData>(sheet.value);
         //MyVersusMatchResults.winCounter = JsonConvert.DeserializeObject<WinCounterData>(sheet.value);
         MyVersusMatchResults.winCounter = JsonSerializer.Deserialize<WinCounterData>(sheet.value);

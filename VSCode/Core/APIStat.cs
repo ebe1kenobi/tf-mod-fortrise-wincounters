@@ -76,32 +76,63 @@ namespace TFModFortRiseWinCounters
       }
     }
 
+    // Appel synchrone declenche depuis le lancement d'un versus (RollcallElement) :
+    // tant qu'il n'a pas rendu, le jeu est fige. Le timeout par defaut de
+    // HttpWebRequest etant de 100 s, un serveur injoignable bloquait tout ce temps.
+    public const int TimeoutMs = 15000;
+
+    // Rend null si les stats n'ont pas pu etre recuperees (timeout, serveur muet,
+    // erreur HTTP, JSON invalide). L'appelant previent alors le joueur plutot que
+    // de faire tomber le mod ou le jeu.
     public Sheet GetStat(string id, string date)
     {
+      if (string.IsNullOrEmpty(urlTemplate))
+      {
+        TFModFortRiseWinCounters.Logger.Info("[APIStat] pas d'URL configuree, stats en ligne ignorees");
+        return null;
+      }
 
       string finalUrl = urlTemplate.Replace("[#ID#]", Uri.EscapeDataString(id));
       finalUrl = finalUrl.Replace("[#DATE#]", Uri.EscapeDataString(date));
-      //TFModFortRiseWinCounters.Logger.Info($"finalUrl {finalUrl}");
+      TFModFortRiseWinCounters.Logger.Info($"finalUrl {finalUrl}");
 
-      var request = (HttpWebRequest)WebRequest.Create(finalUrl);
-      request.Method = "GET";
-
-      using (var response = (HttpWebResponse)request.GetResponse())
-      using (var reader = new StreamReader(response.GetResponseStream()))
+      try
       {
-        //TFModFortRiseWinCounters.Logger.Info($"GetResponseStream");
+        var request = (HttpWebRequest)WebRequest.Create(finalUrl);
+        request.Method = "GET";
+        request.Timeout = TimeoutMs;
+        request.ReadWriteTimeout = TimeoutMs;
 
-        string result = reader.ReadToEnd();
-        //Sheet sheet = JsonConvert.DeserializeObject<Sheet>(result);
-        //TFModFortRiseWinCounters.Logger.Info($"result {result}");
-
-        Sheet sheet = JsonSerializer.Deserialize<Sheet>(result);
-        return sheet;
+        using (var response = (HttpWebResponse)request.GetResponse())
+        using (var reader = new StreamReader(response.GetResponseStream()))
+        {
+          string result = reader.ReadToEnd();
+          return JsonSerializer.Deserialize<Sheet>(result);
+        }
+      }
+      catch (WebException ex)
+      {
+        string cause = ex.Status == WebExceptionStatus.Timeout
+            ? $"pas de reponse en {TimeoutMs / 1000} s"
+            : ex.Status.ToString();
+        TFModFortRiseWinCounters.Logger.Info($"[APIStat] GetStat echoue ({cause}) : {ex.Message}");
+        return null;
+      }
+      catch (Exception ex)
+      {
+        TFModFortRiseWinCounters.Logger.Info($"[APIStat] GetStat : reponse inexploitable : {ex.Message}");
+        return null;
       }
     }
 
-    public void PostStat(string id, string date, string json)
+    // Meme contrainte que GetStat : appel synchrone sur le thread de jeu, en fin
+    // de match. Rend false si l'envoi n'a pas abouti ; la sauvegarde locale doit
+    // se faire quoi qu'il arrive (voir SaveCurrentResult).
+    public bool PostStat(string id, string date, string json)
     {
+      if (string.IsNullOrEmpty(urlTemplate))
+        return false;
+
       string finalUrl = urlTemplate.Replace("[#ID#]", Uri.EscapeDataString(id));
       finalUrl = finalUrl.Replace("[#DATE#]", Uri.EscapeDataString(date));
         //TFModFortRiseWinCounters.Logger.Info($"PostStat {finalUrl}");
@@ -121,20 +152,31 @@ namespace TFModFortRiseWinCounters
 
       var data2 = Encoding.UTF8.GetBytes(data);
 
-      var request = (HttpWebRequest)WebRequest.Create(finalUrl);
-      request.Method = "POST";
-      request.ContentType = "application/json";
-      request.ContentLength = data2.Length;
-
-      using (var stream = request.GetRequestStream())
+      try
       {
-        stream.Write(data2, 0, data2.Length);
+        var request = (HttpWebRequest)WebRequest.Create(finalUrl);
+        request.Method = "POST";
+        request.ContentType = "application/json";
+        request.ContentLength = data2.Length;
+        request.Timeout = TimeoutMs;
+        request.ReadWriteTimeout = TimeoutMs;
+
+        using (var stream = request.GetRequestStream())
+        {
+          stream.Write(data2, 0, data2.Length);
+        }
+
+        using (var response = (HttpWebResponse)request.GetResponse())
+        using (var reader = new StreamReader(response.GetResponseStream()))
+        {
+          reader.ReadToEnd();
+        }
+        return true;
       }
-
-      using (var response = (HttpWebResponse)request.GetResponse())
-      using (var reader = new StreamReader(response.GetResponseStream()))
+      catch (Exception ex)
       {
-        string result = reader.ReadToEnd();
+        TFModFortRiseWinCounters.Logger.Info($"[APIStat] PostStat echoue : {ex.Message}");
+        return false;
       }
     }
 
