@@ -59,6 +59,9 @@ namespace TFModFortRiseWinCounters
         }
       }
 
+      // Score final du match, conserve dans matchsResults (format v4).
+      winCounter.addMatchResult(session);
+
       //need to save each time
       //TFModFortRiseWinCounters.Logger.Info($"MyVersusMatchResults StartNew ");
 
@@ -183,10 +186,28 @@ namespace TFModFortRiseWinCounters
       float panelHeight = 0f;
       if (todayStats.Count == 0)
       {
+        // Deux situations tres differentes aboutissaient au meme "AUCUNE
+        // STATISTIQUE" : le chargement a echoue (serveur injoignable), ou il a
+        // reussi mais cette combinaison de joueurs n'a encore rien enregistre.
+        // Le second cas est normal en debut de soiree et ne doit pas faire croire
+        // a une panne.
+        string line1, line2;
+        if (TFModFortRiseWinCountersModule.StatsUnavailable)
+        {
+          line1 = "ERROR - STATS";
+          line2 = "NOT LOADED";
+        }
+        else
+        {
+          line1 = "NO STATS FOUND";
+          line2 = "FOR THOSE PLAYERS";
+        }
+
         panelHeight = 240f;
         MenuPanel.DrawPanel(base.X - 100f, base.Y - panelHeight / 2f, 200f, panelHeight);
-        Draw.TextCentered(TFGame.Font, "STATISTIQUES", this.Position + new Vector2(0f, -panelHeight / 2f + 20f), Color.White);
-        Draw.TextCentered(TFGame.Font, "AUCUNE STATISTIQUE", this.Position + new Vector2(0f, 0f), Color.Gray);
+        Draw.TextCentered(TFGame.Font, "STATISTICS", this.Position + new Vector2(0f, -panelHeight / 2f + 20f), Color.White);
+        Draw.TextCentered(TFGame.Font, line1, this.Position + new Vector2(0f, -7f), Color.Gray);
+        Draw.TextCentered(TFGame.Font, line2, this.Position + new Vector2(0f, 7f), Color.Gray);
         //Draw.TextCentered(TFGame.Font, "APPUYEZ SUR A OU B POUR FERMER", this.Position + new Vector2(0f, panelHeight / 2f - 20f), Color.Gray);
         base.Render();
         return;
@@ -215,7 +236,7 @@ namespace TFModFortRiseWinCounters
       //panelHeight = 50f + (todayStats.Count + 1) * lineHeight + 30f; // titre + en-tête + lignes joueurs + footer
       panelHeight = 240f;
       MenuPanel.DrawPanel(base.X - totalWidth / 2f - 10f, base.Y - panelHeight / 2f, totalWidth + 20f, panelHeight);
-      Draw.TextCentered(TFGame.Font, "STATISTIQUES", this.Position + new Vector2(0f, -panelHeight / 2f + 15f), Color.White);
+      Draw.TextCentered(TFGame.Font, "STATISTICS", this.Position + new Vector2(0f, -panelHeight / 2f + 15f), Color.White);
 
       // Afficher l'en-tête
       float yOffset = -panelHeight / 2f + 35f;

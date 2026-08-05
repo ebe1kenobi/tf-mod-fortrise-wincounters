@@ -9,8 +9,29 @@ namespace TFModFortRiseWinCounters
 {
   internal class WinCounterData
   {
-    public const String version = "v3";
+    /// <summary>
+    /// Version du format de donnees. Etait declaree const en FortRise 5, donc
+    /// absente du JSON : System.Text.Json ne serialise que les proprietes
+    /// publiques, ni les constantes ni les champs. C'est une propriete pour que
+    /// la version reparaisse dans les fichiers, comme en FortRise 4.
+    ///
+    /// v4 = ajout de "mode" et de "matchsResults".
+    /// </summary>
+    public String version { get; set; } = "v4";
+
     public String date { get; set; }
+
+    /// <summary>
+    /// Mode de jeu de la session, sous forme lisible (voir
+    /// TFModFortRiseWinCountersModule.getModeName). Renseigne a la sauvegarde.
+    /// </summary>
+    public String mode { get; set; }
+
+    /// <summary>
+    /// Score final de chaque match joue, dans l'ordre : un dictionnaire
+    /// joueur -> score par match.
+    /// </summary>
+    public List<Dictionary<string, int>> matchsResults { get; set; } = new List<Dictionary<string, int>>();
 
     public Dictionary<String, int> todayWin { get; set; } = new Dictionary<String, int>();
     public Dictionary<String, int> totalWin { get; set; } = new Dictionary<String, int>();
@@ -24,6 +45,9 @@ namespace TFModFortRiseWinCounters
     {
       todayWin.Clear();
       today.Clear();
+      // matchsResults ne retient que les matchs du jour : sans ce Clear la liste
+      // grossissait indefiniment, a contre-courant des autres compteurs "today".
+      matchsResults.Clear();
     }
 
     public void clear() {
@@ -32,6 +56,7 @@ namespace TFModFortRiseWinCounters
 
       today.Clear();
       total.Clear();
+      matchsResults.Clear();
     }
 
     public int getTodayWin(String name) {
@@ -80,6 +105,36 @@ namespace TFModFortRiseWinCounters
       }
       today[name].win++;
       total[name].win++;
+    }
+
+    /// <summary>
+    /// Enregistre le score final d'un match : un dictionnaire joueur -> score,
+    /// ajoute a la suite de matchsResults.
+    ///
+    /// Au passage, les joueurs du match sont declares dans todayWin/totalWin meme
+    /// s'ils n'ont rien gagne, pour qu'ils apparaissent dans les compteurs avec
+    /// zero plutot que d'en etre absents.
+    /// </summary>
+    public void addMatchResult(Session session)
+    {
+      if (session == null || session.Scores == null) return;
+
+      Dictionary<String, int> matchResult = new Dictionary<String, int>();
+      for (int i = 0; i < session.Scores.Length && i < TFGame.Players.Length; i++)
+      {
+        if (!TFGame.Players[i]) continue;
+
+        string playerName = CustomNameImport.GetPlayerName(i);
+        matchResult[playerName] = session.Scores[i];
+
+        if (!todayWin.ContainsKey(playerName))
+          todayWin[playerName] = 0;
+
+        if (!totalWin.ContainsKey(playerName))
+          totalWin[playerName] = 0;
+      }
+
+      matchsResults.Add(matchResult);
     }
 
     public void addStat(int playerIndex, DeathCause deathType, int killerIndex) {

@@ -30,7 +30,6 @@ namespace TFModFortRiseWinCounters
 
     internal Type[] Hookables = [
         typeof(MyPlayerIndicator),
-        typeof(MyRollcallElement),
         typeof(MySession),
         typeof(MyStatWarning),
         typeof(MyVersusMatchResults),
@@ -69,7 +68,10 @@ namespace TFModFortRiseWinCounters
       System.Net.ServicePointManager.SecurityProtocol =
           SecurityProtocolType.Tls12;
       Instance = this;
-      TFModFortRiseWinCounters.Logger.Init("ModWinCounters");
+      // Les logs vont dans l'espace de sauvegarde du mod. Le chemin relatif
+      // precedent les ecrivait dans un dossier ModWinCounters cree a la racine
+      // du repertoire d'installation de TowerFall.
+      TFModFortRiseWinCounters.Logger.Init(SavePath);
       ApiStat = new APIStat(content, SettingsFileName);
 
       // CustomName n'exporte plus via MonoMod.ModInterop en FortRise 5 : il publie
@@ -102,6 +104,7 @@ namespace TFModFortRiseWinCounters
             MyVersusMatchResults.winCounter.resetToday();
           }
           moveResultForV3Format();
+          moveResultForV4Format();
 
         }
       }
@@ -109,6 +112,32 @@ namespace TFModFortRiseWinCounters
       {
         ;
       }
+    }
+
+    /// <summary>
+    /// Nom lisible du mode de jeu courant.
+    ///
+    /// MatchSettings.Mode est un enum, mais un mode ajoute par un mod (Respawn,
+    /// PlayTag...) recoit une valeur au-dela de celles declarees : ToString() rend
+    /// alors le nombre brut ("12") au lieu d'un nom. FortRise range le vrai nom
+    /// dans CustomVersusModeName des que IsCustom est vrai, c'est donc lui qu'on
+    /// prend en premier.
+    /// </summary>
+    public static String getModeName()
+    {
+      var settings = MainMenu.VersusMatchSettings;
+      if (settings == null)
+        return "UNKNOWN";
+
+      if (settings.IsCustom && !String.IsNullOrEmpty(settings.CustomVersusModeName))
+        return settings.CustomVersusModeName;
+
+      // Filet pour une valeur hors enum sans IsCustom : mieux vaut un libelle
+      // reconnaissable qu'un nombre nu au milieu d'un nom de fichier.
+      if (!Enum.IsDefined(typeof(Modes), settings.Mode))
+        return "MODE" + (int)settings.Mode;
+
+      return settings.Mode.ToString();
     }
 
     public static String getTeamName() {
@@ -122,6 +151,9 @@ namespace TFModFortRiseWinCounters
         }
       }
       playerNames.Sort();
+      // Le mode ouvre le nom d'equipe : il sert de cle au fichier local comme a
+      // l'enregistrement en ligne, et separe donc les stats par mode de jeu.
+      playerNames.Insert(0, getModeName());
       TeamName = String.Join("-", playerNames);
       return TeamName;
     }
@@ -151,6 +183,7 @@ namespace TFModFortRiseWinCounters
       string fileName = GetStatFilePath(today + "-" + getFileSuffix() + "-wincounters.json");
 
       MyVersusMatchResults.winCounter.date = DateTime.Now.ToString("yyyy-MM-dd-HH");
+      MyVersusMatchResults.winCounter.mode = getModeName();
 
       try
       {
@@ -211,9 +244,63 @@ namespace TFModFortRiseWinCounters
         }
       }
     }
+    // Cle (mode + joueurs) pour laquelle les compteurs en memoire ont ete charges.
+    // Sert a detecter un changement de mode entre le rollcall et le lancement.
+    private static string loadedTeamName;
+
+    /// <summary>
+    /// Charge les compteurs du match qui demarre, si la cle a change.
+    ///
+    /// C'est le seul point de chargement. Le declencher au rollcall ne marchait
+    /// pas : le mode de jeu se choisit APRES, RollcallElement.StartVersus basculant
+    /// vers MenuState.VersusOptions, l'ecran du bouton de mode. Les compteurs
+    /// etaient donc charges pour le mode precedent, puis reenregistres sous la cle
+    /// du nouveau mode a la fin du match — les stats d'un mode se retrouvaient
+    /// recopiees dans un autre.
+    ///
+    /// Session.StartGame est le dernier moment ou le mode est encore modifiable,
+    /// et n'est appele qu'une fois par match. Le test sur la cle evite de recharger
+    /// quand rien n'a change.
+    /// </summary>
+    public static void ReloadIfKeyChanged(Session session)
+    {
+      if (!Settings.enable) return;
+      if (session == null || session.MatchSettings == null) return;
+      if (!IsVersusMatch(session.MatchSettings)) return;
+
+      string current = getTeamName();
+      if (current == loadedTeamName) return;
+
+      TFModFortRiseWinCounters.Logger.Info(
+          $"[WinCounters] chargement des compteurs pour '{current}'"
+          + (loadedTeamName != null ? $" (precedent : '{loadedTeamName}')" : ""));
+      loadPreviousResultIfExists();
+    }
+
+    /// <summary>
+    /// Le mod ne compte que les matchs versus : inutile d'aller interroger le
+    /// serveur en Quest, Dark World ou Trials.
+    ///
+    /// On lit le mode de la session plutot que MainMenu.RollcallMode : cette
+    /// statique n'est posee que par les boutons du menu principal, donc un match
+    /// lance autrement — par le mod Tournament par exemple — garderait la valeur
+    /// du mode joue precedemment.
+    /// </summary>
+    private static bool IsVersusMatch(MatchSettings settings)
+    {
+      if (settings.IsCustom) return true;   // les modes ajoutes par un mod sont des modes versus
+
+      Modes mode = settings.Mode;
+      return mode == Modes.LastManStanding
+          || mode == Modes.HeadHunters
+          || mode == Modes.TeamDeathmatch
+          || mode == Modes.Warlord;
+    }
+
     public static void loadPreviousResultIfExists()
     {
       //TFModFortRiseWinCounters.Logger.Info($"loadPreviousResultIfExists");
+      loadedTeamName = getTeamName();
       MyVersusMatchResults.winCounter.clear();
 
       string today = DateTime.Now.ToString("yyyy-MM-dd");
@@ -222,18 +309,30 @@ namespace TFModFortRiseWinCounters
         APIStat.Sheet sheet = ApiStat.GetStat(getTeamName(), today);
 
         // sheet == null : serveur injoignable ou reponse inexploitable (GetStat a
-        // deja journalise la cause). Auparavant sheet.error levait une NRE dans ce
-        // cas. On repart de compteurs vides et on previent le joueur a l'ecran :
-        // les scores affiches ne refletent pas l'historique.
-        if (sheet == null || sheet.error != null || sheet.value == null)
+        // deja journalise la cause). C'est le SEUL cas qui merite d'alerter le
+        // joueur : les scores affiches ne refletent alors pas l'historique.
+        if (sheet == null)
         {
-          if (sheet != null && sheet.error != null)
-            TFModFortRiseWinCounters.Logger.Info($"[WinCounters] le serveur a renvoye une erreur : {sheet.error}");
           TFModFortRiseWinCounters.Logger.Info("[WinCounters] statistiques en ligne NON chargees, compteurs remis a zero");
           StatsUnavailable = true;
           initPlayerData();
           return;
         }
+
+        // Reponse valide mais vide : l'appli web repond error/value nul quand
+        // l'identifiant n'a encore rien d'enregistre. C'est le cas normal d'une
+        // premiere partie avec cette equipe — ou, depuis que le mode fait partie
+        // de l'identifiant, d'un mode joue pour la premiere fois. Ce n'est pas une
+        // panne, donc pas de bandeau d'alerte.
+        if (sheet.error != null || sheet.value == null)
+        {
+          if (sheet.error != null)
+            TFModFortRiseWinCounters.Logger.Info($"[WinCounters] rien d'enregistre pour '{getTeamName()}' : {sheet.error}");
+          StatsUnavailable = false;
+          initPlayerData();
+          return;
+        }
+
         StatsUnavailable = false;
 
         //WinCounterData data = JsonConvert.DeserializeObject<WinCounterData>(sheet.value);
@@ -256,6 +355,8 @@ namespace TFModFortRiseWinCounters
         }
         // v3 : move totla result in new format
         moveResultForV3Format();
+        // v4 : mode + matchsResults, absents des enregistrements plus anciens.
+        moveResultForV4Format();
         initPlayerData();
         
         return;
@@ -301,6 +402,25 @@ namespace TFModFortRiseWinCounters
         string lastFile = files.First().Path;
         TFModFortRiseWinCountersModule.LoadFromFile(lastFile, true);
       }
+    }
+
+    /// <summary>
+    /// Migration vers le format v4 : les fichiers plus anciens n'ont ni mode ni
+    /// liste de resultats de match. Le mode est inconnu retroactivement, on le
+    /// marque comme tel plutot que d'inventer une valeur.
+    /// </summary>
+    public static void moveResultForV4Format()
+    {
+      var counter = MyVersusMatchResults.winCounter;
+      if (counter == null) return;
+
+      if (counter.matchsResults == null)
+        counter.matchsResults = new List<Dictionary<string, int>>();
+
+      if (String.IsNullOrEmpty(counter.mode))
+        counter.mode = "UNKNOWN";
+
+      counter.version = "v4";
     }
 
     public static void moveResultForV3Format() {

@@ -22,7 +22,7 @@ namespace TFModFortRiseWinCounters
   // jeu le fait pour son HUD dans Level.PostScreen.
   public class MyStatWarning : IHookable
   {
-    private const string Message = "STATS NON CHARGEES - COMPTEURS A ZERO";
+    private const string Message = "ERROR - STATS NOT LOADED";
 
     // Ecran interne du jeu : 320x240. On garde une marge pour ne pas coller aux
     // bords, et on descend le texte au ras du bas.
