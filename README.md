@@ -1,102 +1,75 @@
-2025/12/07 : New format json for saved stat and new stat 
+# WinCounters
+
+Tracks wins and per-player stats across a game night: wins today, all-time total,
+kills, deaths, self-kills, and who killed whom. Results are written to one file per
+day and per game mode, and can be synced with a web app.
+
+A mod for **FortRise 5** (>= 5.3.3). The FortRise 4 version (`tf-mod-fortrise-wincounters`) is no longer maintained: fixes and new features only land in this repository.
+
+## Installation
+
+1. Install FortRise 5 and start the game through `FortRise.exe`.
+2. Install the mods this one depends on first: **CustomName**.
+3. Copy `release/wincounters` (or the shipped folder) into `<TowerFall>/FortRise/Mods/`.
+
+Settings are under **Options > Mods > WinCounters**.
+Data and log files live in `<TowerFall>/FortRise/Saves/WinCounters/` and `<TowerFall>/FortRise/Logs/`.
+
+## Usage
+
+Counters are drawn on the end-of-match screen, under each archer.
+
+| Input | Effect |
+|-------|--------|
+| **Y** (Alt2) on the end-of-match screen | open the detailed stats popup |
+| A / B | close the popup |
+
+The popup lists, per player: wins, kills, deaths, self-kills, plus who killed them
+(KILL BY) and who they killed (KILL FROM).
+
+Two distinct messages can replace the table:
+
+- `NO STATS FOUND / FOR THOSE PLAYERS`: nothing recorded yet for this team and this
+  mode. That is the normal case for a first game.
+- `ERROR - STATS / NOT LOADED`: the server is unreachable or the reply is unusable.
+  Counters then start from zero - a banner also says so at the bottom of the screen
+  for a few seconds.
+
+## Files produced
+
+One file per day, per team **and per game mode**:
 
 ```
-"{
-  ""todayWin"": {
-    ""P2"": 2
-  },
-  ""totalWin"": {
-    ""P2"": 2
-  },
-  ""today"": {
-    ""P1"": {
-      ""win"": 0,
-      ""kill"": 0,
-      ""death"": 2,
-      ""self"": 0,
-      ""killFrom"": {
-        ""Arrow"": 2
-      },
-      ""killBy"": {
-        ""P2"": 2
-      }
-    },
-    ""P2"": {
-      ""win"": 2,
-      ""kill"": 2,
-      ""death"": 0,
-      ""self"": 0,
-      ""killFrom"": {},
-      ""killBy"": {}
-    }
-  },
-  ""total"": {
-    ""P1"": {
-      ""win"": 0,
-      ""kill"": 0,
-      ""death"": 2,
-      ""self"": 0,
-      ""killFrom"": {
-        ""Arrow"": 2
-      },
-      ""killBy"": {
-        ""P2"": 2
-      }
-    },
-    ""P2"": {
-      ""win"": 2,
-      ""kill"": 2,
-      ""death"": 0,
-      ""self"": 0,
-      ""killFrom"": {},
-      ""killBy"": {}
-    }
-  },
-  ""date"": ""2025-12-07-18""
-}"
+<TowerFall>/FortRise/Saves/WinCounters/2026-08-05-Respawn-DAVID-ERIC-wincounters.json
 ```
 
-2025/10/20 : Need Mod "Custom Name" https://github.com/ebe1kenobi/tf-mod-fortrise-custom-name, it will now save the stat with the name instead of the color of the player. So the player can change his archer when he wants. 
+The mode comes first in the name, so switching mode starts from fresh counters,
+which avoids mixing stats from two different rule sets. Modes added by a mod show up
+under their real name (`Respawn`, `PlayTag`...) rather than a number.
 
+Contents (format `v4`): `version`, `date`, `mode`, `matchsResults` (the final score
+of every match of the day), `todayWin` / `totalWin`, and `today` / `total` with the
+per-player breakdown.
 
-Fork of the wincounters mod in the port of Bartizan Mod in fortrise https://github.com/FortRise/ExampleFortRiseMod/blob/main/BartizanMod/Core/Other.cs
+## Settings
 
-2 counters, one for the current party, and another with the total of each party throw the years
+| Setting | Purpose |
+|---------|---------|
+| Enable | turn counting on |
+| Display total win after today win | show the all-time total next to today's wins |
+| Reset today counter | reset today's counters (handy when a player joins mid-evening) |
+| Use Online stat (need a config file) | sync with the web app |
 
-![image](https://github.com/user-attachments/assets/6ae4990b-bf7d-4e4f-aa46-a0811597e28e)
+`settings.json`, shipped with the mod, holds the web app URL. Network calls have a
+5 second guard: if the server is unreachable the game carries on and the local save
+still happens.
 
+## Build / deployment
 
-In the bartizan mod, the counter reset each time we change the match settings, the players ...
+| Script | Purpose |
+|--------|---------|
+| `script/release.bat` | build, then assemble into `release/` |
+| `script/deploy.bat` | copy `release/` into the TowerFall `Mods` folder |
+| `script/release_deploy.bat` | both, one after the other |
 
-* WiderSetMod supported
-
-The total victories of each player will be displayed in the gem on the versus match result screen
-
-Settings
-
-![image](https://github.com/user-attachments/assets/054d5765-06ec-498a-b768-869192091d28)
-
-the team parameter is used to save the stat in different file when we played with different team.
-
-The stat are saved in the TowerFall directory 
-
-![image](https://github.com/user-attachments/assets/c8487c59-1a5c-48a0-b471-631c36ad5c61)
-
-The Use online Stat save the data online on a spreadsheet (you need to create and configure it)
-
-1. create the spreadsheet (3 column id	date value, no data!)
-2. ![image](https://github.com/user-attachments/assets/370ad798-1742-4b5e-9b78-9c3038c0b155)
-3. create the AppsScript (copy the content of script/appscript.js)
-4. ![image](https://github.com/user-attachments/assets/094ade8f-5878-42f5-8305-768c38bb848f)
-5. create the file settings.json with the url of the script deployed in the "TowerFall\Mods\tf-mod-fortrise-wincounters" directory
-
-settings.json
-
-```
-{
-    "appliWebUrl": "https://script.google.com/macros/s/---yoursscript-----/exec?id=[#ID#]&date=[#DATE#]"
-}
-```
-
-
-
+Paths (game folder, module name) are set in `script/config.bat`.
