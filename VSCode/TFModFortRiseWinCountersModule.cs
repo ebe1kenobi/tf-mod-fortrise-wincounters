@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 //using TFModFortRiseLoaderAI;
 using System.Diagnostics;
@@ -71,7 +71,7 @@ namespace TFModFortRiseWinCounters
       // Les logs vont dans l'espace de sauvegarde du mod. Le chemin relatif
       // precedent les ecrivait dans un dossier ModWinCounters cree a la racine
       // du repertoire d'installation de TowerFall.
-      TFModFortRiseWinCounters.Logger.Init(SavePath);
+      TFModFortRiseWinCounters.Logger.Init(Meta.Name);
       ApiStat = new APIStat(content, SettingsFileName);
 
       // CustomName n'exporte plus via MonoMod.ModInterop en FortRise 5 : il publie
