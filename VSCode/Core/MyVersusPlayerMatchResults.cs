@@ -55,9 +55,9 @@ namespace TFModFortRiseWinCounters
       var playerIndex = DynamicData.For(__instance).Get<int>("playerIndex");
       if (DynamicData.For(__instance).TryGet<OutlineText>("winText", out var text)){
 
-        text.DrawText = MyVersusMatchResults.winCounter.getTodayWin(CustomNameImport.GetPlayerName(playerIndex)) 
+        text.DrawText = MyVersusMatchResults.winCounter.getTodayWin(ProfilesImport.GetPlayerName(playerIndex)) 
                     + (TFModFortRiseWinCountersModule.Settings.displayTotalWin
-                        ? " (" + MyVersusMatchResults.winCounter.getTotalWin(CustomNameImport.GetPlayerName(playerIndex)) + ")"
+                        ? " (" + MyVersusMatchResults.winCounter.getTotalWin(ProfilesImport.GetPlayerName(playerIndex)) + ")"
                         : ""
                     );
         text.Render();

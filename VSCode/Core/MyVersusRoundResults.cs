@@ -36,7 +36,7 @@ namespace TFModFortRiseWinCounters
         if (!textText[0].ToString().Equals("P")) continue;
         if (textText[1].ToString().Equals(" ")) continue; //second pass for NAI 1 AI 1 P 1
         int playerIndex = int.Parse(textText[1].ToString()) - 1;
-        dynData.Set("text", CustomNameImport.GetPlayerName(playerIndex));
+        dynData.Set("text", ProfilesImport.GetPlayerName(playerIndex));
         text.Position.X = 20;
         dynData.Dispose();
       }

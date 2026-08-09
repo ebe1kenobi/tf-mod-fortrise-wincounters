@@ -54,8 +54,8 @@ namespace TFModFortRiseWinCounters
 
         if (session.MatchStats[playerIndex].Won)
         {
-          //winCounter.increment(CustomNameImport.GetPlayerName(playerIndex));
-          winCounter.addWinner(CustomNameImport.GetPlayerName(playerIndex));
+          //winCounter.increment(ProfilesImport.GetPlayerName(playerIndex));
+          winCounter.addWinner(ProfilesImport.GetPlayerName(playerIndex));
         }
       }
 

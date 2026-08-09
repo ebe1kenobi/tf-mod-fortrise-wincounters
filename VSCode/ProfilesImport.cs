@@ -1,21 +1,19 @@
-using System;
+﻿using System;
 
 namespace TFModFortRiseWinCounters
 {
   /// <summary>
-  /// Acces aux noms de joueurs fournis par le mod CustomName.
+  /// Acces aux noms de joueurs fournis par le mod Profiles.
   ///
-  /// FortRise 4 passait par MonoMod.ModInterop ([ModImportName] + delegues statiques).
-  /// CustomName n'exporte plus par ce biais en FortRise 5 : il publie une interface
-  /// via GetApi(). Les delegues restaient donc null et les ~10 sites d'appel de
-  /// GetPlayerName levaient une NullReferenceException.
+  /// Profiles a repris ce role a CustomName : il publie une interface via
+  /// GetApi(), que l'interop de FortRise proxifie sur la forme des membres.
   ///
-  /// Repli sur "P1".."P8" si CustomName est absent, pour que les compteurs restent
+  /// Repli sur "P1".."P8" si Profiles est absent, pour que les compteurs restent
   /// fonctionnels (les cles de stats seront simplement P1, P2, ...).
   /// </summary>
-  public static class CustomNameImport
+  public static class ProfilesImport
   {
-    internal static ICustomNameModApi Api;
+    internal static IProfilesModApi Api;
 
     public static bool IsAvailable => Api != null;
 
@@ -31,7 +29,7 @@ namespace TFModFortRiseWinCounters
         }
         catch (Exception ex)
         {
-          TFModFortRiseWinCounters.Logger.Info($"[CustomName] GetPlayerName({playerIndex}) a echoue : {ex.Message}");
+          TFModFortRiseWinCounters.Logger.Info($"[Profiles] GetPlayerName({playerIndex}) a echoue : {ex.Message}");
         }
       }
 
@@ -49,7 +47,7 @@ namespace TFModFortRiseWinCounters
       }
       catch (Exception ex)
       {
-        TFModFortRiseWinCounters.Logger.Info($"[CustomName] SetPlayerName({playerIndex}) a echoue : {ex.Message}");
+        TFModFortRiseWinCounters.Logger.Info($"[Profiles] SetPlayerName({playerIndex}) a echoue : {ex.Message}");
       }
     }
   }

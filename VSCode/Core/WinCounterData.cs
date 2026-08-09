@@ -124,7 +124,7 @@ namespace TFModFortRiseWinCounters
       {
         if (!TFGame.Players[i]) continue;
 
-        string playerName = CustomNameImport.GetPlayerName(i);
+        string playerName = ProfilesImport.GetPlayerName(i);
         matchResult[playerName] = session.Scores[i];
 
         if (!todayWin.ContainsKey(playerName))
@@ -140,7 +140,7 @@ namespace TFModFortRiseWinCounters
     public void addStat(int playerIndex, DeathCause deathType, int killerIndex) {
       //look in this.RoundLogic.OnPlayerDeath
       //and Player.die
-      string playerKilled = CustomNameImport.GetPlayerName(playerIndex);
+      string playerKilled = ProfilesImport.GetPlayerName(playerIndex);
       string killerPlayer = "";
 
       if (!today.ContainsKey(playerKilled))
@@ -153,7 +153,7 @@ namespace TFModFortRiseWinCounters
       }
 
       if (killerIndex > -1){
-        killerPlayer = CustomNameImport.GetPlayerName(killerIndex);
+        killerPlayer = ProfilesImport.GetPlayerName(killerIndex);
 
         if (!today.ContainsKey(killerPlayer))
         {

@@ -25,7 +25,7 @@ namespace TFModFortRiseWinCounters
     public static void ctor_patch(PlayerIndicator __instance, Vector2 offset, int playerIndex, bool crown)
     {
       var dynData = DynamicData.For(__instance);
-      dynData.Set("text", CustomNameImport.GetPlayerName(playerIndex));
+      dynData.Set("text", ProfilesImport.GetPlayerName(playerIndex));
       dynData.Dispose();
     }
   }

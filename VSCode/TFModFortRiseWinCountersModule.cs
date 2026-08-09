@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 //using TFModFortRiseLoaderAI;
 using System.Diagnostics;
@@ -63,7 +63,7 @@ namespace TFModFortRiseWinCounters
     {
       if (!Debugger.IsAttached)
       {
-        //Debugger.Launch(); // Proposera d’attacher Visual Studio
+        //Debugger.Launch(); // Proposera dâ€™attacher Visual Studio
       }
       System.Net.ServicePointManager.SecurityProtocol =
           SecurityProtocolType.Tls12;
@@ -74,11 +74,12 @@ namespace TFModFortRiseWinCounters
       TFModFortRiseWinCounters.Logger.Init(Meta.Name);
       ApiStat = new APIStat(content, SettingsFileName);
 
-      // CustomName n'exporte plus via MonoMod.ModInterop en FortRise 5 : il publie
-      // une interface via GetApi(). Sans cela GetPlayerName restait null.
-      CustomNameImport.Api = context.Interop.GetApi<ICustomNameModApi>("CustomName");
-      if (CustomNameImport.Api == null)
-        TFModFortRiseWinCounters.Logger.Info("[CustomName] mod absent : repli sur les noms P1..P8");
+      // Les noms de joueurs viennent du mod Profiles, qui a repris ce role a
+      // CustomName. L'interop de FortRise construit son proxy sur la forme des
+      // membres : il suffit que IProfilesModApi decrive ce que Profiles expose.
+      ProfilesImport.Api = context.Interop.GetApi<IProfilesModApi>("Ebe1.Profiles");
+      if (ProfilesImport.Api == null)
+        TFModFortRiseWinCounters.Logger.Info("[Profiles] mod absent : repli sur les noms P1..P8");
 
       foreach (var hookable in Hookables)
       {
@@ -147,7 +148,7 @@ namespace TFModFortRiseWinCounters
       {
         if (TFGame.Players[playerIndex])
         {
-          playerNames.Add(CustomNameImport.GetPlayerName(playerIndex));
+          playerNames.Add(ProfilesImport.GetPlayerName(playerIndex));
         }
       }
       playerNames.Sort();
@@ -216,7 +217,7 @@ namespace TFModFortRiseWinCounters
 
         if (TFGame.Players[i])
         {
-          string playerName = CustomNameImport.GetPlayerName(i);
+          string playerName = ProfilesImport.GetPlayerName(i);
           //TFModFortRiseWinCounters.Logger.Info($"playerName {playerName}");
           if (!MyVersusMatchResults.winCounter.total.ContainsKey(playerName))
           {
@@ -255,7 +256,7 @@ namespace TFModFortRiseWinCounters
     /// pas : le mode de jeu se choisit APRES, RollcallElement.StartVersus basculant
     /// vers MenuState.VersusOptions, l'ecran du bouton de mode. Les compteurs
     /// etaient donc charges pour le mode precedent, puis reenregistres sous la cle
-    /// du nouveau mode a la fin du match — les stats d'un mode se retrouvaient
+    /// du nouveau mode a la fin du match â€” les stats d'un mode se retrouvaient
     /// recopiees dans un autre.
     ///
     /// Session.StartGame est le dernier moment ou le mode est encore modifiable,
@@ -283,7 +284,7 @@ namespace TFModFortRiseWinCounters
     ///
     /// On lit le mode de la session plutot que MainMenu.RollcallMode : cette
     /// statique n'est posee que par les boutons du menu principal, donc un match
-    /// lance autrement — par le mod Tournament par exemple — garderait la valeur
+    /// lance autrement â€” par le mod Tournament par exemple â€” garderait la valeur
     /// du mode joue precedemment.
     /// </summary>
     private static bool IsVersusMatch(MatchSettings settings)
@@ -321,7 +322,7 @@ namespace TFModFortRiseWinCounters
 
         // Reponse valide mais vide : l'appli web repond error/value nul quand
         // l'identifiant n'a encore rien d'enregistre. C'est le cas normal d'une
-        // premiere partie avec cette equipe — ou, depuis que le mode fait partie
+        // premiere partie avec cette equipe â€” ou, depuis que le mode fait partie
         // de l'identifiant, d'un mode joue pour la premiere fois. Ce n'est pas une
         // panne, donc pas de bandeau d'alerte.
         if (sheet.error != null || sheet.value == null)
@@ -380,7 +381,7 @@ namespace TFModFortRiseWinCounters
           .Select(path => new
           {
             Path = path,
-            // On essaie de parser les 10 premiers caractères en date
+            // On essaie de parser les 10 premiers caractÃ¨res en date
             Date = DateTime.TryParseExact(
                   Path.GetFileName(path).Substring(0, 10),
                   "yyyy-MM-dd",
@@ -398,7 +399,7 @@ namespace TFModFortRiseWinCounters
 
       if (files.Any())
       {
-        // On prend le plus récent
+        // On prend le plus rÃ©cent
         string lastFile = files.First().Path;
         TFModFortRiseWinCountersModule.LoadFromFile(lastFile, true);
       }
