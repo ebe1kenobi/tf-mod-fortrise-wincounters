@@ -1,17 +1,17 @@
 {
-	"name": "WinCounters",
-	"version": "1.0.8",
-	"author": "ebe1.kenobi",
-	"description": "Show the win counter for each player in the result match screen, reset only when game restart, and can select a player name from file playernName.json with left trigger, and add stat kill/death/self/kill by who and from what",
-	"dll": "TFModFortRiseWinCounters.dll",
-	"dependencies": [
-		{
-			"name": "FortRise",
-			"version": "5.3.3"
-		},
-		{
-			"name": "Archer",
-			"version": "1.0.0"
-		}
-	]
+  "name": "WinCounters",
+  "version": "1.1.0",
+  "author": "ebe1.kenobi",
+  "description": "Show the win counter for each player in the result match screen, reset only when game restart, and can select a player name from file playernName.json with left trigger, and add stat kill/death/self/kill by who and from what",
+  "dll": "TFModFortRiseWinCounters.dll",
+  "dependencies": [
+    {
+      "name": "FortRise",
+      "version": "5.3.3"
+    },
+    {
+      "name": "Archer",
+      "version": "1.1.0"
+    }
+  ]
 }
