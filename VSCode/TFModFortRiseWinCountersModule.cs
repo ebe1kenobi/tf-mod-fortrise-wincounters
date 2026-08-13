@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 //using TFModFortRiseLoaderAI;
 using System.Diagnostics;
@@ -71,13 +71,17 @@ namespace TFModFortRiseWinCounters
       // Les logs vont dans l'espace de sauvegarde du mod. Le chemin relatif
       // precedent les ecrivait dans un dossier ModWinCounters cree a la racine
       // du repertoire d'installation de TowerFall.
-      TFModFortRiseWinCounters.Logger.Init(Meta.Name);
+      TFModFortRiseWinCounters.Logger.Init(logger);
+
+      // Les relevés vivent desormais dans un sous-dossier : on y emmene ceux d'avant.
+      MigrateStatFiles();
+
       ApiStat = new APIStat(content, SettingsFileName);
 
       // Les noms de joueurs viennent du mod Profiles, qui a repris ce role a
       // CustomName. L'interop de FortRise construit son proxy sur la forme des
       // membres : il suffit que IProfilesModApi decrive ce que Profiles expose.
-      ProfilesImport.Api = context.Interop.GetApi<IProfilesModApi>("Ebe1.Profiles");
+      ProfilesImport.Api = context.Interop.GetApi<IProfilesModApi>("Archer");
       if (ProfilesImport.Api == null)
         TFModFortRiseWinCounters.Logger.Info("[Profiles] mod absent : repli sur les noms P1..P8");
 
@@ -158,23 +162,101 @@ namespace TFModFortRiseWinCounters
       TeamName = String.Join("-", playerNames);
       return TeamName;
     }
+    /// <summary>
+    /// La cle d'un fichier de relevé : le nom d'equipe, rendu sur pour un nom de
+    /// fichier. Voir SanitizeForFileName.
+    /// </summary>
     public static string getFileSuffix() {
 
-      return getTeamName();
+      return SanitizeForFileName(getTeamName());
 
     }
 
     /// <summary>
-    /// Chemin complet d'un fichier de stats, dans l'espace de sauvegarde du mod.
-    /// Le repertoire est cree au besoin.
+    /// Le dossier des relevés locaux : <c>Saves/WinCounters/stat</c>.
+    ///
+    /// A part, et non a la racine de l'espace de sauvegarde : un fichier par jour et
+    /// par equipe, cela finit par faire du monde, et les reglages du mod se
+    /// retrouvaient noyes au milieu.
+    /// </summary>
+    public static string StatPath => Path.Combine(SavePath, "stat");
+
+    /// <summary>
+    /// Chemin complet d'un fichier de stats. Le repertoire est cree au besoin.
     /// </summary>
     public static string GetStatFilePath(string fileName)
     {
-      string folder = SavePath;
+      string folder = StatPath;
       if (!Directory.Exists(folder))
         Directory.CreateDirectory(folder);
 
       return Path.Combine(folder, fileName);
+    }
+
+    /// <summary>
+    /// Rend une chaine utilisable dans un nom de fichier.
+    ///
+    /// Indispensable depuis qu'un mode ajoute par un mod entre dans la cle : FortRise
+    /// le nomme <c>"{mod}/{mode}"</c> - "Scroll/Speed Run", "Soccer/SOCCER" - et cette
+    /// BARRE est un separateur de repertoire. Le motif de recherche devenait alors un
+    /// chemin, et .NET tentait d'ouvrir un dossier nomme "*-Scroll" : "la syntaxe du
+    /// nom de fichier est incorrecte", au lancement de la partie.
+    ///
+    /// Seuls les NOMS DE FICHIERS sont assainis. La cle envoyee au serveur, elle,
+    /// garde sa barre : les relevés en ligne deja enregistres sont ranges dessous.
+    /// </summary>
+    public static string SanitizeForFileName(string value)
+    {
+      if (string.IsNullOrEmpty(value))
+        return "";
+
+      char[] invalid = Path.GetInvalidFileNameChars();
+      var sb = new System.Text.StringBuilder(value.Length);
+      foreach (char c in value)
+        sb.Append(Array.IndexOf(invalid, c) >= 0 ? '-' : c);
+
+      return sb.ToString();
+    }
+
+    /// <summary>
+    /// Deplace les relevés d'avant dans le sous-dossier "stat".
+    ///
+    /// Une seule fois, sans rien ecraser : un fichier deja present sous le nouveau
+    /// nom fait foi. Les reglages du mod, eux, restent a la racine - ils
+    /// n'appartiennent pas a ce mod mais a FortRise.
+    /// </summary>
+    public static void MigrateStatFiles()
+    {
+      try
+      {
+        if (!Directory.Exists(SavePath))
+          return;
+
+        string[] olds = Directory.GetFiles(SavePath, "*-wincounters.json");
+        if (olds.Length == 0)
+          return;
+
+        Directory.CreateDirectory(StatPath);
+        int moved = 0;
+        foreach (string old in olds)
+        {
+          string target = Path.Combine(StatPath, Path.GetFileName(old));
+          if (File.Exists(target))
+            continue;
+
+          File.Move(old, target);
+          moved++;
+        }
+
+        if (moved > 0)
+          TFModFortRiseWinCounters.Logger.Info($"[Stats] {moved} relevé(s) deplacé(s) dans stat/");
+      }
+      catch (Exception e)
+      {
+        // Un deplacement rate laisse les fichiers ou ils sont : les stats du jour
+        // repartiront de zero, mais le mod se charge.
+        TFModFortRiseWinCounters.Logger.Error("[Stats] deplacement impossible : " + e.Message);
+      }
     }
 
     public static void SaveCurrentResult()
@@ -377,7 +459,7 @@ namespace TFModFortRiseWinCounters
 
       //load totalWins from last file found
       var files = Directory
-          .EnumerateFiles(SavePath, "*-" + getFileSuffix() + "-wincounters.json")
+          .EnumerateFiles(StatPath, "*-" + getFileSuffix() + "-wincounters.json")
           .Select(path => new
           {
             Path = path,

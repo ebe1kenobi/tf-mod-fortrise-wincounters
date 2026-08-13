@@ -21,11 +21,27 @@ Counters are drawn on the end-of-match screen, under each archer.
 
 | Input | Effect |
 |-------|--------|
-| **Y** (Alt2) on the end-of-match screen | open the detailed stats popup |
+| **Left upper shoulder** (Alt2) on the end-of-match screen | open the detailed stats popup |
+| Up / Down | scroll the table |
 | A / B | close the popup |
 
 The popup lists, per player: wins, kills, deaths, self-kills, plus who killed them
-(KILL BY) and who they killed (KILL FROM).
+(`BY`) and who they killed (`VS`). Each figure reads `3(21)`: the night, then the
+all-time total in brackets.
+
+### Why the table scrolls
+
+A player is not a line. One who was killed by three different people takes four, and
+eight players with a full history overflowed the panel - the extra lines were drawn
+outside it and wandered across the screen, because Monocle does not clip.
+
+The lines are therefore **built once** when the popup opens, into a list, and drawing
+is only a window sliding over it. That is what makes the height knowable before
+anything is drawn, and scrolling is just a matter of moving the window. The earlier
+version laid itself out *while* rendering, stacking Y offsets as it went, so nothing
+knew how tall the table was until it was already too late.
+
+The scrollbar on the right appears only when there is something further down.
 
 Two distinct messages can replace the table:
 
