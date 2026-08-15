@@ -1,4 +1,5 @@
 # WinCounters
+<img width="1074" height="670" alt="image" src="https://github.com/user-attachments/assets/af27e9d0-f4f2-4d5a-be63-4b0702fc9d8d" />
 
 Tracks wins and per-player stats across a game night: wins today, all-time total,
 kills, deaths, self-kills, and who killed whom. Results are written to one file per
@@ -68,6 +69,8 @@ of every match of the day), `todayWin` / `totalWin`, and `today` / `total` with 
 per-player breakdown.
 
 ## Settings
+
+<img width="700" height="338" alt="image" src="https://github.com/user-attachments/assets/599a3d1e-ef73-4095-873a-5d72ee8cb522" />
 
 | Setting | Purpose |
 |---------|---------|
