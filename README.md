@@ -10,8 +10,12 @@ A mod for **FortRise 5** (>= 5.3.3). The FortRise 4 version (`tf-mod-fortrise-wi
 ## Installation
 
 1. Install FortRise 5 and start the game through `FortRise.exe`.
-2. Install the mods this one depends on first: **CustomName**.
-3. Copy `release/wincounters` (or the shipped folder) into `<TowerFall>/FortRise/Mods/`.
+2. Copy `release/wincounters` (or the shipped folder) into `<TowerFall>/FortRise/Mods/`.
+
+**No mod is required.** The **Archer** mod is used if it is there, to put real player
+names on the stats instead of `P1`..`P8` — it took that job over from CustomName, which
+this mod no longer looks for. Without Archer everything still works; the keys are just
+`P1`, `P2`, and so on.
 
 Settings are under **Options > Mods > WinCounters**.
 Data and log files live in `<TowerFall>/FortRise/Saves/WinCounters/` and `<TowerFall>/FortRise/Logs/`.
@@ -77,32 +81,60 @@ per-player breakdown.
 | Enable | turn counting on |
 | Display total win after today win | show the all-time total next to today's wins |
 | Reset today counter | reset today's counters (handy when a player joins mid-evening) |
-| Use Online stat (need a config file) | sync with the web app |
+| Use Online stat (need a config file) | also keep the stats in a Google spreadsheet |
 
-The game will crash if online is set to true and no serveur settings or url in settings.json.
+## Online stats
 
-`settings.json`, shipped with the mod, holds the web app URL. Network calls have a
-5 second guard: if the server is unreachable the game carries on and the local save
-still happens.
+Off by default, and **entirely optional**: with it off, everything above works from the
+local files alone. Turned on, the same figures are additionally read from and written to
+a Google spreadsheet of your own — which is what lets two people on two machines share
+one set of counters.
 
-## Online Settings
+You supply the spreadsheet: nothing is hosted for you, and no data leaves the machine
+until you have set one up.
 
-The Use online Stat save the data online on a spreadsheet (you need to create and configure it)
+**1. Create the spreadsheet.** Three columns — `id`, `date`, `value` — and no rows. The
+mod fills it.
 
-create the spreadsheet (3 column id date value, no data!)
 <img width="345" height="472" alt="image" src="https://github.com/user-attachments/assets/e106e04c-13ae-4b5a-94d5-ac40dd820d1f" />
 
-create the AppsScript (copy the content of script/appscript.js)
+**2. Add the Apps Script.** In the spreadsheet, `Extensions > Apps Script`, and paste the
+contents of [script/appscript.js](script/appscript.js). Deploy it as a **web app**, and
+copy the deployment URL.
+
 <img width="538" height="305" alt="image" src="https://github.com/user-attachments/assets/f3fa62ec-81d6-4fb0-a5b6-fc6d10e1bd28" />
 
-create the file settings.json with the url of the script deployed in the "TowerFall\Mods\tf-mod-fortrise-wincounters" directory
+**3. Point the mod at it.** Edit `settings.json` in
+`<TowerFall>/FortRise/Mods/tf-mod-fortrise-wincounters/`, keeping the two placeholders
+— the mod replaces `[#ID#]` and `[#DATE#]` on every call:
 
-settings.json
-
+```json
 {
-    "appliWebUrl": "https://script.google.com/macros/s/---yoursscript-----/exec?id=[#ID#]&date=[#DATE#]"
+    "appliWebUrl": "https://script.google.com/macros/s/---your-script---/exec?id=[#ID#]&date=[#DATE#]"
 }
+```
 
+**4. Tick `Use Online stat`** in the mod settings.
+
+### What happens when it goes wrong
+
+**Nothing fatal.** An earlier version of this page warned that the game would crash with
+the setting on and no URL configured; it does not, and never should — every path is
+guarded:
+
+| Situation | What the mod does |
+|-----------|-------------------|
+| `settings.json` missing, unreadable, or with no URL | logs one line, skips the network entirely, saves locally |
+| Server unreachable, or silent | gives up after **15 seconds**, saves locally |
+| Reply unusable | same, and the popup shows `ERROR - STATS / NOT LOADED` |
+
+The local save is the one that always happens: the online copy is a mirror, never the
+source of truth. The counters you see on screen come from the file on disk.
+
+The fifteen seconds are worth knowing about. The call is made on the game thread when a
+versus match starts, so the game is **frozen** while it waits. Fifteen is already a
+compromise: `HttpWebRequest` defaults to a hundred seconds, and an unreachable server
+used to lock the game up for that long.
 
 ## Build / deployment
 
