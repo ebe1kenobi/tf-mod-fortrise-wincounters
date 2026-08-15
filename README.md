@@ -76,9 +76,30 @@ per-player breakdown.
 | Reset today counter | reset today's counters (handy when a player joins mid-evening) |
 | Use Online stat (need a config file) | sync with the web app |
 
+The game will crash if online is set to true and no serveur settings or url in settings.json.
+
 `settings.json`, shipped with the mod, holds the web app URL. Network calls have a
 5 second guard: if the server is unreachable the game carries on and the local save
 still happens.
+
+## Online Settings
+
+The Use online Stat save the data online on a spreadsheet (you need to create and configure it)
+
+create the spreadsheet (3 column id date value, no data!)
+<img width="345" height="472" alt="image" src="https://github.com/user-attachments/assets/e106e04c-13ae-4b5a-94d5-ac40dd820d1f" />
+
+create the AppsScript (copy the content of script/appscript.js)
+<img width="538" height="305" alt="image" src="https://github.com/user-attachments/assets/f3fa62ec-81d6-4fb0-a5b6-fc6d10e1bd28" />
+
+create the file settings.json with the url of the script deployed in the "TowerFall\Mods\tf-mod-fortrise-wincounters" directory
+
+settings.json
+
+{
+    "appliWebUrl": "https://script.google.com/macros/s/---yoursscript-----/exec?id=[#ID#]&date=[#DATE#]"
+}
+
 
 ## Build / deployment
 
